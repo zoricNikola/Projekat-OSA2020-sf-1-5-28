@@ -61,8 +61,8 @@ public class Account implements Serializable {
 //	@OneToMany(cascade = {ALL}, fetch = LAZY, mappedBy = "account")
 //	private Set<Folder> folders = new HashSet<Folder>();
 	
-//	@OneToMany(cascade = {ALL}, fetch = LAZY, mappedBy = "account")
-//	private Set<Message> messages = new HashSet<Message>();
+	@OneToMany(cascade = {ALL}, fetch = LAZY, mappedBy = "account")
+	private Set<Message> messages = new HashSet<Message>();
 	
 	public Account() {}
 
@@ -136,6 +136,14 @@ public class Account implements Serializable {
 
 	public void setDisplayName(String displayName) {
 		this.displayName = displayName;
+	}
+	
+	public Set<Message> getMessages() {
+		return messages;
+	}
+
+	public void setMessages(Set<Message> messages) {
+		this.messages = messages;
 	}
 
 	public static long getSerialversionuid() {
