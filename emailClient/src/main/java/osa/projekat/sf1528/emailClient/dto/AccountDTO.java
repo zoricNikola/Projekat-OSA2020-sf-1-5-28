@@ -26,10 +26,12 @@ public class AccountDTO implements Serializable {
 	
 	private String displayName;
 	
+	private UserDTO user;
+	
 	public AccountDTO() {}
 	
 	public AccountDTO(Long id, String smtpAddress, Integer smtpPort, Short inServerType, String inServerAddress,
-			Integer inServerPort, String username, String password, String displayName) {
+			Integer inServerPort, String username, String password, String displayName, UserDTO user) {
 		super();
 		this.id = id;
 		this.smtpAddress = smtpAddress;
@@ -40,12 +42,13 @@ public class AccountDTO implements Serializable {
 		this.username = username;
 		this.password = password;
 		this.displayName = displayName;
+		this.user = user;
 	}
 
 
 	public AccountDTO(Account account) {
 		this(account.getId(), account.getSmtpAddress(), account.getSmtpPort(), account.getInServerType(), account.getInServerAddress(), 
-				account.getInServerPort(), account.getUsername(), account.getPassword(), account.getDisplayName());
+				account.getInServerPort(), account.getUsername(), account.getPassword(), account.getDisplayName(), new UserDTO(account.getUser()));
 	}
 	
 
@@ -123,6 +126,14 @@ public class AccountDTO implements Serializable {
 
 	public static long getSerialversionuid() {
 		return serialVersionUID;
+	}
+
+	public UserDTO getUser() {
+		return user;
+	}
+
+	public void setUser(UserDTO user) {
+		this.user = user;
 	}
 	
 	

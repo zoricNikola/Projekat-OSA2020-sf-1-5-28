@@ -47,7 +47,43 @@ public class User implements Serializable{
 	private Set<Contact> contacts = new HashSet<Contact>();
 
 	public User() {}
+
+	public void addAccount(Account account) {
+		if (account.getUser() != null)
+			account.getUser().removeAccount(account);
+		account.setUser(this);
+		getAccounts().add(account);
+	}
 	
+	public void removeAccount(Account account) {
+		account.setUser(null);
+		getAccounts().remove(account);
+	}
+	
+	public void addTag(Tag tag) {
+		if (tag.getUser() != null)
+			tag.getUser().removeTag(tag);
+		tag.setUser(this);
+		getTags().add(tag);
+			
+	}
+	
+	public void removeTag(Tag tag) {
+		tag.setUser(null);
+		getTags().remove(tag);
+	}
+	
+	public void addContact(Contact contact) {
+		if (contact.getUser() != null)
+			contact.getUser().removeContact(contact);
+		contact.setUser(this);
+		getContacts().add(contact);
+	}
+	
+	public void removeContact(Contact contact) {
+		contact.setUser(null);
+		getContacts().remove(contact);
+	}
 	
 	public Long getId() {
 		return id;

@@ -14,6 +14,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
@@ -23,8 +24,8 @@ import javax.persistence.Table;
 @Table(name = "messages")
 public class Message implements Serializable {
 
-	private static final long serialVersionUID = 2L;
-	
+	private static final long serialVersionUID = -3081793074498606133L;
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "message_id", unique = true, nullable = false)
@@ -36,10 +37,10 @@ public class Message implements Serializable {
 	@Column(name = "to", unique = false, nullable = false)
 	private String to;
 	
-	@Column(name = "cc", unique = false, nullable = false)
+	@Column(name = "cc", unique = false, nullable = true)
 	private String cc;
 	
-	@Column(name = "bcc", unique = false, nullable = false)
+	@Column(name = "bcc", unique = false, nullable = true)
 	private String bcc;
 	
 	@Column(name = "date_time", unique = false, nullable = false)
@@ -58,18 +59,44 @@ public class Message implements Serializable {
 	@JoinColumn(name = "account_id", referencedColumnName = "account_id", nullable = false)
 	private Account account;
 	
-//	@ManyToOne
-//	@JoinColumn(name = "folder_id", referencedColumnName = "folder_id", nullable = false)
-//	private Folder folder;
+	@ManyToOne
+	@JoinColumn(name = "folder_id", referencedColumnName = "folder_id", nullable = false)
+	private Folder folder;
 	
-//	@ManyToMany
-//	----------------- 
-//	private Set<Tag> tags = new HashSet<Tag>();
+	@ManyToMany
+	@JoinTable(
+			name = "message_tag", 
+			joinColumns = { @JoinColumn(name = "message_id") },
+			inverseJoinColumns = { @JoinColumn(name = "tag_id") })
+	private Set<Tag> tags = new HashSet<Tag>();
 	
+
 	@OneToMany(cascade = {ALL}, fetch = LAZY, mappedBy = "message")
 	private Set<Attachment> attachments = new HashSet<Attachment>();
 	
 	public Message() {}
+	
+	public void addTag(Tag tag) {
+		tag.getMessages().add(this);
+		getTags().add(tag);
+	}
+	
+	public void removeTag(Tag tag) {
+		tag.getMessages().remove(this);
+		getTags().remove(tag);
+	}
+	
+	public void addAttachment(Attachment attachment) {
+		if (attachment.getMessage() != null)
+			attachment.getMessage().removeAttachment(attachment);
+		attachment.setMessage(this);
+		getAttachments().add(attachment);
+	}
+	
+	public void removeAttachment(Attachment attachment) {
+		attachment.setMessage(null);
+		getAttachments().remove(attachment);
+	}
 
 	public Long getId() {
 		return id;
@@ -151,12 +178,28 @@ public class Message implements Serializable {
 		this.account = account;
 	}
 	
+	public Folder getFolder() {
+		return folder;
+	}
+
+	public void setFolder(Folder folder) {
+		this.folder = folder;
+	}
+	
 	public Set<Attachment> getAttachments() {
 		return attachments;
 	}
 
 	public void setAttachments(Set<Attachment> attachments) {
 		this.attachments = attachments;
+	}
+	
+	public Set<Tag> getTags() {
+		return tags;
+	}
+
+	public void setTags(Set<Tag> tags) {
+		this.tags = tags;
 	}
 
 	public static long getSerialversionuid() {

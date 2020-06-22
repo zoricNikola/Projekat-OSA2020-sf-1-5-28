@@ -1,7 +1,6 @@
 package osa.projekat.sf1528.emailClient.model;
 
 import static javax.persistence.CascadeType.ALL;
-import static javax.persistence.FetchType.EAGER;
 import static javax.persistence.FetchType.LAZY;
 
 import java.io.Serializable;
@@ -10,7 +9,6 @@ import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -23,8 +21,8 @@ import javax.persistence.Table;
 @Table(name = "accounts")
 public class Account implements Serializable {
 
-	private static final long serialVersionUID = 1L;
-	
+	private static final long serialVersionUID = -5390265725037712857L;
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "account_id", unique = true, nullable = false)
@@ -54,17 +52,43 @@ public class Account implements Serializable {
 	@Column(name = "account_display_name", unique = false, nullable = false)
 	private String displayName;
 	
-//	@ManyToOne
-//	@JoinColumn(name = "user_id", referencedColumnName = "user_id", nullable = false)
-//	private User user;
+	@ManyToOne
+	@JoinColumn(name = "user_id", referencedColumnName = "user_id", nullable = false)
+	private User user;
 	
-//	@OneToMany(cascade = {ALL}, fetch = LAZY, mappedBy = "account")
-//	private Set<Folder> folders = new HashSet<Folder>();
+
+	@OneToMany(cascade = {ALL}, fetch = LAZY, mappedBy = "account")
+	private Set<Folder> folders = new HashSet<Folder>();
 	
+
 	@OneToMany(cascade = {ALL}, fetch = LAZY, mappedBy = "account")
 	private Set<Message> messages = new HashSet<Message>();
 	
 	public Account() {}
+	
+	public void addFolder(Folder folder) {
+		if (folder.getAccount() != null)
+			folder.getAccount().removeFolder(folder);
+		folder.setAccount(this);
+		getFolders().add(folder);
+	}
+	
+	public void removeFolder(Folder folder) {
+		folder.setAccount(null);
+		getFolders().remove(folder);
+	}
+	
+	public void addMessage(Message message) {
+		if (message.getAccount() != null)
+			message.getAccount().removeMessage(message);
+		message.setAccount(this);
+		getMessages().add(message);
+	}
+	
+	public void removeMessage(Message message) {
+		message.setAccount(null);
+		getMessages().remove(message);
+	}
 
 	public Long getId() {
 		return id;
@@ -136,6 +160,22 @@ public class Account implements Serializable {
 
 	public void setDisplayName(String displayName) {
 		this.displayName = displayName;
+	}
+	
+	public User getUser() {
+		return user;
+	}
+
+	public void setUser(User user) {
+		this.user = user;
+	}
+	
+	public Set<Folder> getFolders() {
+		return folders;
+	}
+
+	public void setFolders(Set<Folder> folders) {
+		this.folders = folders;
 	}
 	
 	public Set<Message> getMessages() {

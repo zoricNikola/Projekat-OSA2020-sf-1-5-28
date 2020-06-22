@@ -17,18 +17,21 @@ public class AttachmentDTO implements Serializable {
 	
 	private String name;
 	
+	private MessageDTO message;
+	
 	public AttachmentDTO() {}
 
-	public AttachmentDTO(Long id, Base64 data, String mimeType, String name) {
+	public AttachmentDTO(Long id, Base64 data, String mimeType, String name, MessageDTO message) {
 		super();
 		this.id = id;
 		this.data = data;
 		this.mimeType = mimeType;
 		this.name = name;
+		this.message = message;
 	}
 	
 	public AttachmentDTO(Attachment attachment) {
-		this(attachment.getId(), attachment.getData() ,attachment.getMimeType(), attachment.getName());
+		this(attachment.getId(), attachment.getData() ,attachment.getMimeType(), attachment.getName(), new MessageDTO(attachment.getMessage()));
 	}
 
 	public Long getId() {
@@ -65,6 +68,14 @@ public class AttachmentDTO implements Serializable {
 
 	public static long getSerialversionuid() {
 		return serialVersionUID;
+	}
+
+	public MessageDTO getMessage() {
+		return message;
+	}
+
+	public void setMessage(MessageDTO message) {
+		this.message = message;
 	}
 	
 	
