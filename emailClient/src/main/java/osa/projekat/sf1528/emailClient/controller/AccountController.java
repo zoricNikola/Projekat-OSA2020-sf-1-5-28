@@ -81,7 +81,7 @@ public class AccountController {
 		return new ResponseEntity<List<FolderDTO>>(accountFolders, HttpStatus.OK);
 	}
 	
-	@PostMapping(consumes = "appliaction/json")
+	@PostMapping(consumes = "application/json")
 	public ResponseEntity<AccountDTO> saveAccount(@RequestBody AccountDTO accountDTO) {
 		Account account = new Account();
 		account.setSmtpAddress(accountDTO.getSmtpAddress());

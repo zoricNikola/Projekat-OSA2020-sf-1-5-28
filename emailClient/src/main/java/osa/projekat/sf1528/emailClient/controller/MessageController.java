@@ -54,20 +54,20 @@ public class MessageController {
 		return new ResponseEntity<MessageDTO>(new MessageDTO(message), HttpStatus.OK);
 	}
 	
-	//@GetMapping(value="/{id}/tags")
-	//public ResponseEntity<List<TagDTO>> getMessageTags(@PathVariable("id") Long id) {
-		//Message message = messageService.findOne(id);
-		//if (message == null)
-		// new ResponseEntity<List<TagDTO>>(HttpStatus.NOT_FOUND);
+	@GetMapping(value="/{id}/tags")
+	public ResponseEntity<List<TagDTO>> getMessageTags(@PathVariable("id") Long id) {
+		Message message = messageService.findOne(id);
+		if (message == null)
+			return new ResponseEntity<List<TagDTO>>(HttpStatus.NOT_FOUND);
 		
-		//List<Tag> tags = tagService.findByMessage(message);
-		//List<TagDTO> messageTags = new ArrayList<TagDTO>();
-		//for (Tag tag : tags) {
-		//	messageTags.add(new TagDTO(tag));
-		//}
+		List<Tag> tags = tagService.findByMessage(message);
+		List<TagDTO> messageTags = new ArrayList<TagDTO>();
+		for (Tag tag : tags) {
+			messageTags.add(new TagDTO(tag));
+		}
 		
-		//return new ResponseEntity<List<TagDTO>>(messageTags, HttpStatus.OK);
-	//}
+		return new ResponseEntity<List<TagDTO>>(messageTags, HttpStatus.OK);
+	}
 	
 	@GetMapping(value="/{id}/attachments")
 	public ResponseEntity<List<AttachmentDTO>> getMessageAttachments(@PathVariable("id") Long id) {
@@ -84,7 +84,7 @@ public class MessageController {
 		return new ResponseEntity<List<AttachmentDTO>>(messageAttachments, HttpStatus.OK);
 	}
 	
-	@PostMapping(consumes = "appliaction/json")
+	@PostMapping(consumes = "application/json")
 	public ResponseEntity<MessageDTO> saveMessage(@RequestBody MessageDTO messageDTO) {
 		Message message = new Message();
 		message.setFrom(messageDTO.getFrom());

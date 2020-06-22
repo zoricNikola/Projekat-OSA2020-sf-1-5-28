@@ -45,7 +45,7 @@ public class Folder implements Serializable {
 	@OneToMany(cascade = {ALL}, fetch = LAZY, mappedBy = "folder")
 	private Set<Message> messages = new HashSet<Message>();
 	
-	@OneToMany(cascade = {ALL}, fetch = LAZY, mappedBy = "folder")
+	@OneToMany(cascade = {ALL}, fetch = LAZY, mappedBy = "destination")
 	private Set<Rule> rules;
 	
 	public Folder() {}

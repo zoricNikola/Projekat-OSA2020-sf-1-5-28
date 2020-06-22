@@ -1,7 +1,6 @@
 package osa.projekat.sf1528.emailClient.dto;
 
 import java.io.Serializable;
-import java.lang.management.OperatingSystemMXBean;
 
 import osa.projekat.sf1528.emailClient.model.Rule;
 import osa.projekat.sf1528.emailClient.model.Rule.Condition;

@@ -36,7 +36,7 @@ public class ContactController {
 		return new ResponseEntity<ContactDTO>(new ContactDTO(contact), HttpStatus.OK);
 	}
 	
-	@PostMapping(consumes = "appliaction/json")
+	@PostMapping(consumes = "application/json")
 	public ResponseEntity<ContactDTO> saveContact(@RequestBody ContactDTO contactDTO) {
 		Contact contact = new Contact();
 		contact.setFirstName(contactDTO.getFirstName());

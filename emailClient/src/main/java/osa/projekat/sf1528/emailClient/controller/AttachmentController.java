@@ -35,7 +35,7 @@ public class AttachmentController {
 		return new ResponseEntity<AttachmentDTO>(new AttachmentDTO(attachment), HttpStatus.OK);
 	}
 	
-	@PostMapping(consumes = "appliaction/json")
+	@PostMapping(consumes = "application/json")
 	public ResponseEntity<AttachmentDTO> saveAttachment(@RequestBody AttachmentDTO attachmentDTO) {
 		Attachment attachment = new Attachment();
 		attachment.setData(attachmentDTO.getData());

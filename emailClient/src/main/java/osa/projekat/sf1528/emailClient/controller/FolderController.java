@@ -96,7 +96,7 @@ public class FolderController {
 		return new ResponseEntity<List<RuleDTO>>(folderRules, HttpStatus.OK);
 	}
 	
-	@PostMapping(consumes = "appliaction/json")
+	@PostMapping(consumes = "application/json")
 	public ResponseEntity<FolderDTO> saveFolder(@RequestBody FolderDTO folderDTO) {
 		Folder folder = new Folder();
 		folder.setName(folderDTO.getName());

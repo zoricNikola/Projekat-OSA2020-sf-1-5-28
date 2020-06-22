@@ -1,7 +1,6 @@
 package osa.projekat.sf1528.emailClient.model;
 
 import java.io.Serializable;
-import java.util.Base64;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -24,7 +23,7 @@ public class Attachment implements Serializable {
 	private Long id;
 	
 	@Column(name = "data", unique = false, nullable = false)
-	private Base64 data;
+	private byte[] data;
 	
 	@Column(name = "mime_type", unique = false, nullable = false)
 	private String mimeType;
@@ -46,11 +45,11 @@ public class Attachment implements Serializable {
 		this.id = id;
 	}
 
-	public Base64 getData() {
+	public byte[] getData() {
 		return data;
 	}
 
-	public void setData(Base64 data) {
+	public void setData(byte[] data) {
 		this.data = data;
 	}
 
@@ -81,6 +80,5 @@ public class Attachment implements Serializable {
 	public static long getSerialversionuid() {
 		return serialVersionUID;
 	}
-	
 
 }

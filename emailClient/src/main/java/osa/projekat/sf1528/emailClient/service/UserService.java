@@ -1,10 +1,12 @@
 package osa.projekat.sf1528.emailClient.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import osa.projekat.sf1528.emailClient.model.User;
 import osa.projekat.sf1528.emailClient.repository.UserRepository;
 
+@Service
 public class UserService implements UserServiceInterface{
 	
 	@Autowired

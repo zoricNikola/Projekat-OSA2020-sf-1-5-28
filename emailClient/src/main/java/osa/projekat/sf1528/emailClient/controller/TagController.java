@@ -50,27 +50,27 @@ public class TagController {
 		return new ResponseEntity<TagDTO>(new TagDTO(tag), HttpStatus.OK);
 	}
 	
-//	@GetMapping(value = "/{id}/messages", consumes = "application/json")
-//	public ResponseEntity<List<MessageDTO>> getTagMessagesByAccount(@RequestBody AccountDTO accountDTO, @PathVariable("id") Long id) {
-//		Tag tag = tagService.findOne(id);
-//		if (tag == null)
-//			return new ResponseEntity<List<MessageDTO>>(HttpStatus.NOT_FOUND);
-//		
-//		Account account = accountService.findOne(accountDTO.getId());
-//		if (account == null)
-//			return new ResponseEntity<List<MessageDTO>>(HttpStatus.BAD_REQUEST);
-//		
-//		List<Message> messages = messageService.findByAccountAndTag(account, tag);
-//		List<MessageDTO> tagMessages = new ArrayList<MessageDTO>();
-//		
-//		for (Message message : messages) {
-//			tagMessages.add(new MessageDTO(message));
-//		}
-//		
-//		return new ResponseEntity<List<MessageDTO>>(tagMessages, HttpStatus.OK);
-//	}
+	@GetMapping(value = "/{id}/messages", consumes = "application/json")
+	public ResponseEntity<List<MessageDTO>> getTagMessagesByAccount(@RequestBody AccountDTO accountDTO, @PathVariable("id") Long id) {
+		Tag tag = tagService.findOne(id);
+		if (tag == null)
+			return new ResponseEntity<List<MessageDTO>>(HttpStatus.NOT_FOUND);
+		
+		Account account = accountService.findOne(accountDTO.getId());
+		if (account == null)
+			return new ResponseEntity<List<MessageDTO>>(HttpStatus.BAD_REQUEST);
+		
+		List<Message> messages = messageService.findByAccountAndTag(account, tag);
+		List<MessageDTO> tagMessages = new ArrayList<MessageDTO>();
+		
+		for (Message message : messages) {
+			tagMessages.add(new MessageDTO(message));
+		}
+		
+		return new ResponseEntity<List<MessageDTO>>(tagMessages, HttpStatus.OK);
+	}
 	
-	@PostMapping(consumes = "appliaction/json")
+	@PostMapping(consumes = "application/json")
 	public ResponseEntity<TagDTO> saveTag(@RequestBody TagDTO tagDTO) {
 		Tag tag = new Tag();
 		tag.setName(tagDTO.getName());

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import osa.projekat.sf1528.emailClient.model.Account;
 import osa.projekat.sf1528.emailClient.model.Folder;
 import osa.projekat.sf1528.emailClient.model.Message;
+import osa.projekat.sf1528.emailClient.model.Tag;
 import osa.projekat.sf1528.emailClient.repository.MessageRepository;
 
 @Service
@@ -29,6 +30,11 @@ public class MessageService implements MessageServiceInterface {
 	@Override
 	public List<Message> findByFolder(Folder folder) {
 		return messageRepository.findByFolder(folder);
+	}
+
+	@Override
+	public List<Message> findByAccountAndTag(Account account, Tag tag) {
+		return messageRepository.findByAccountAndTagsContaining(account, tag);
 	}
 
 	@Override

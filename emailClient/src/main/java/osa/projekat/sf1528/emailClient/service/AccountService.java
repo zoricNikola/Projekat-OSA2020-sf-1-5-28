@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import osa.projekat.sf1528.emailClient.model.Account;
+import osa.projekat.sf1528.emailClient.model.User;
 import osa.projekat.sf1528.emailClient.repository.AccountRepository;
 
 @Service
@@ -19,10 +20,10 @@ public class AccountService implements AccountServiceInterface {
 		return accountRepository.getOne(accountId);
 	}
 
-//	@Override
-//	public List<Account> findByUser(User user) {
-//		return accountRepository.findByUser(user);
-//	}
+	@Override
+	public List<Account> findByUser(User user) {
+		return accountRepository.findByUser(user);
+	}
 
 	@Override
 	public Account save(Account account) {

@@ -4,11 +4,14 @@ import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import osa.projekat.sf1528.emailClient.model.Message;
 import osa.projekat.sf1528.emailClient.model.Tag;
 import osa.projekat.sf1528.emailClient.model.User;
 
 public interface TagRepository extends JpaRepository<Tag, Long> {
 	
 	List<Tag> findByUser(User user);
+	
+	List<Tag> findByMessagesContaining(Message message);
 
 }

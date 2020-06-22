@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import osa.projekat.sf1528.emailClient.model.Message;
 import osa.projekat.sf1528.emailClient.model.Tag;
 import osa.projekat.sf1528.emailClient.model.User;
 import osa.projekat.sf1528.emailClient.repository.TagRepository;
@@ -23,6 +24,11 @@ public class TagService implements TagServiceInterface {
 	@Override
 	public List<Tag> findByUser(User user) {
 		return tagRepository.findByUser(user);
+	}
+
+	@Override
+	public List<Tag> findByMessage(Message message) {
+		return tagRepository.findByMessagesContaining(message);
 	}
 
 	@Override

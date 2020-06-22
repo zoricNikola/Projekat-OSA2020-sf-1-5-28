@@ -24,13 +24,13 @@ public class Rule implements Serializable{
 	@Column(name = "rule_id", unique = true, nullable = false)
 	private Long id;
 	
-	@Column(name = "value", unique = false, nullable = false)
+	@Column(name = "rule_value", unique = false, nullable = false)
 	private String value;
 	
-	@Column(name = "condition", unique = false, nullable = false)
+	@Column(name = "rule_condition", unique = false, nullable = false)
 	private Condition condition;
 	
-	@Column(name = "operation", unique = false, nullable = false)
+	@Column(name = "rule_operation", unique = false, nullable = false)
 	private Operation operation;
 	
 	@ManyToOne
@@ -83,8 +83,4 @@ public class Rule implements Serializable{
 		return serialVersionUID;
 	}
 	
-	
-	
-	
-
 }
