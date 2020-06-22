@@ -2,8 +2,11 @@ package osa.projekat.sf1528.emailClient.dto;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 import osa.projekat.sf1528.emailClient.model.Message;
+import osa.projekat.sf1528.emailClient.model.Tag;
 
 public class MessageDTO implements Serializable {
 
@@ -27,10 +30,16 @@ public class MessageDTO implements Serializable {
 	
 	private boolean unread;
 	
+	private AccountDTO account;
+	
+	private FolderDTO folder;
+	
+	private Set<TagDTO> tags;
+	
 	public MessageDTO() {}
 
 	public MessageDTO(Long id, String from, String to, String cc, String bcc, LocalDateTime dateTime, String subject,
-			String content, boolean unread) {
+			String content, boolean unread, AccountDTO account, FolderDTO folder) {
 		super();
 		this.id = id;
 		this.from = from;
@@ -41,11 +50,18 @@ public class MessageDTO implements Serializable {
 		this.subject = subject;
 		this.content = content;
 		this.unread = unread;
+		this.account = account;
+		this.folder = folder;
 	}
 
 	public MessageDTO(Message message) {
 		this(message.getId(), message.getFrom(), message.getTo(), message.getCc(), message.getBcc(), message.getDateTime(), 
-				message.getSubject(), message.getContent(), message.isUnread());
+				message.getSubject(), message.getContent(), message.isUnread(), new AccountDTO(message.getAccount()), new FolderDTO(message.getFolder()));
+		this.tags = new HashSet<TagDTO>();
+		
+		for (Tag tag : message.getTags()) {
+			this.tags.add(new TagDTO(tag));
+		}
 	}
 	
 	public Long getId() {
@@ -122,6 +138,30 @@ public class MessageDTO implements Serializable {
 
 	public static long getSerialversionuid() {
 		return serialVersionUID;
+	}
+
+	public AccountDTO getAccount() {
+		return account;
+	}
+
+	public void setAccount(AccountDTO account) {
+		this.account = account;
+	}
+
+	public FolderDTO getFolder() {
+		return folder;
+	}
+
+	public void setFolder(FolderDTO folder) {
+		this.folder = folder;
+	}
+
+	public Set<TagDTO> getTags() {
+		return tags;
+	}
+
+	public void setTags(Set<TagDTO> tags) {
+		this.tags = tags;
 	}
 	
 

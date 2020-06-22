@@ -9,7 +9,6 @@ import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -49,8 +48,43 @@ public class Folder implements Serializable {
 	@OneToMany(cascade = {ALL}, fetch = LAZY, mappedBy = "folder")
 	private Set<Rule> rules;
 	
-
 	public Folder() {}
+
+	public void addChildFolder(Folder folder) {
+		if (folder.getParent() != null)
+			folder.getParent().removeChildFolder(folder);
+		folder.setParent(this);
+		getChildFolders().add(folder);
+	}
+	
+	public void removeChildFolder(Folder folder) {
+		folder.setParent(null);
+		getChildFolders().remove(folder);
+	}
+	
+	public void addMessage(Message message) {
+		if (message.getFolder() != null)
+			message.getFolder().removeMessage(message);
+		message.setFolder(this);
+		getMessages().add(message);
+	}
+	
+	public void removeMessage(Message message) {
+		message.setFolder(null);
+		getMessages().remove(message);
+	}
+	
+	public void addRule(Rule rule) {
+		if (rule.getDestination() != null)
+			rule.getDestination().removeRule(rule);
+		rule.setDestination(this);
+		getRules().add(rule);
+	}
+	
+	public void removeRule(Rule rule) {
+		rule.setDestination(null);
+		getRules().remove(rule);
+	}
 
 	public Long getId() {
 		return id;

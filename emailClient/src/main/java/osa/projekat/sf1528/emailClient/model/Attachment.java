@@ -16,20 +16,20 @@ import javax.persistence.Table;
 @Table(name = "attachments")
 public class Attachment implements Serializable {
 
-	private static final long serialVersionUID = 3L;
-	
+	private static final long serialVersionUID = -6184772261364724856L;
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "attachment_id", unique = true, nullable = false)
 	private Long id;
 	
-	@Column(name = "data", unique = true, nullable = false)
+	@Column(name = "data", unique = false, nullable = false)
 	private Base64 data;
 	
-	@Column(name = "mime_type", unique = true, nullable = false)
+	@Column(name = "mime_type", unique = false, nullable = false)
 	private String mimeType;
 	
-	@Column(name = "name", unique = true, nullable = false)
+	@Column(name = "name", unique = false, nullable = false)
 	private String name;
 	
 	@ManyToOne
