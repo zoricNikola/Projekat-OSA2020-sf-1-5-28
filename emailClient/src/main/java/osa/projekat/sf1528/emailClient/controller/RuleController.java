@@ -1,0 +1,63 @@
+package osa.projekat.sf1528.emailClient.controller;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import osa.projekat.sf1528.emailClient.dto.RuleDTO;
+import osa.projekat.sf1528.emailClient.model.Rule;
+import osa.projekat.sf1528.emailClient.service.FolderServiceInterface;
+import osa.projekat.sf1528.emailClient.service.RuleServiceInterface;
+
+@RestController
+@RequestMapping(value = "api/rules")
+public class RuleController {
+	
+	@Autowired
+	RuleServiceInterface ruleService;
+	
+	@Autowired
+	FolderServiceInterface folderService;
+	
+	@GetMapping(value = "/{id}")
+	public ResponseEntity<RuleDTO> getRule (@PathVariable("id") Long id){
+		Rule rule = ruleService.findOne(id);
+		if(rule == null) {
+			return new ResponseEntity<RuleDTO>(HttpStatus.NOT_FOUND);
+		}	
+	
+		return new ResponseEntity<RuleDTO>(new RuleDTO(rule), HttpStatus.OK);
+		
+	}
+	
+	@PostMapping(consumes = "application/json")
+	public ResponseEntity<RuleDTO> saveRule(@RequestBody RuleDTO ruleDTO){
+		Rule rule = new Rule();
+		rule.setValue(ruleDTO.getValue());
+		rule.setCondition(ruleDTO.getCondition());
+		rule.setOperation(ruleDTO.getOperation());
+		rule.setDestination(folderService.findOne(ruleDTO.getDestination().getId()));
+		
+		rule = ruleService.save(rule);
+		return new ResponseEntity<RuleDTO>(new RuleDTO(rule), HttpStatus.CREATED);
+	}
+	
+	@DeleteMapping(value = "/{id}")
+	public ResponseEntity<Void> deleteAttachment(@PathVariable("id") Long id){
+		Rule rule = ruleService.findOne(id);
+		if(rule == null) {
+			return new ResponseEntity<Void>(HttpStatus.NOT_FOUND);
+		}
+		
+		ruleService.remove(id);
+		return new ResponseEntity<Void>(HttpStatus.OK);
+	}
+
+}
