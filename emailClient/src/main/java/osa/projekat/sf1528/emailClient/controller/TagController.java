@@ -74,7 +74,7 @@ public class TagController {
 	public ResponseEntity<TagDTO> saveTag(@RequestBody TagDTO tagDTO) {
 		Tag tag = new Tag();
 		tag.setName(tagDTO.getName());
-		tag.setUser(userService.findOne(tagDTO.getUser().getId()));
+		userService.findOne(tagDTO.getUser().getId()).addTag(tag);
 
 		tag = tagService.save(tag);
 		return new ResponseEntity<TagDTO>(new TagDTO(tag), HttpStatus.CREATED);
@@ -85,6 +85,12 @@ public class TagController {
 		Tag tag = tagService.findOne(id);
 		if (tag == null)
 			return new ResponseEntity<Void>(HttpStatus.NOT_FOUND);
+		
+		tag.getUser().removeTag(tag);
+		
+		for (Message message : tag.getMessages()) {
+			message.removeTag(tag);
+		}
 		
 		tagService.remove(id);
 		return new ResponseEntity<Void>(HttpStatus.OK);

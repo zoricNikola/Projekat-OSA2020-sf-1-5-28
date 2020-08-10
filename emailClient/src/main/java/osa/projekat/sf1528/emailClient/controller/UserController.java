@@ -50,11 +50,11 @@ public class UserController {
 			return new ResponseEntity<UserDTO>(HttpStatus.NOT_FOUND);
 		}
 		
-		return new ResponseEntity<UserDTO>(HttpStatus.OK);
+		return new ResponseEntity<UserDTO>(new UserDTO(user), HttpStatus.OK);
 	}
 	
 	@GetMapping(value = "/{id}/accounts")
-	public ResponseEntity<List<AccountDTO>> getUserAccount(@PathVariable("id") Long id){
+	public ResponseEntity<List<AccountDTO>> getUserAccounts(@PathVariable("id") Long id){
 		User user = userService.findOne(id);
 		if(user == null) {
 			return new ResponseEntity<List<AccountDTO>>(HttpStatus.NOT_FOUND);

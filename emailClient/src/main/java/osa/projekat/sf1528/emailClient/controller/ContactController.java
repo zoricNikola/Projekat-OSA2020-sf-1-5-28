@@ -45,7 +45,7 @@ public class ContactController {
 		contact.setEmail(contactDTO.getEmail());
 		contact.setNote(contactDTO.getNote());
 		contact.setPhotoPath(contactDTO.getPhotoPath());
-		contact.setUser(userService.findOne(contactDTO.getUser().getId()));
+		userService.findOne(contactDTO.getUser().getId()).addContact(contact);
 		
 		contact = contactService.save(contact);
 		return new ResponseEntity<ContactDTO>(new ContactDTO(contact), HttpStatus.CREATED);
@@ -74,6 +74,7 @@ public class ContactController {
 		if (contact == null)
 			return new ResponseEntity<Void>(HttpStatus.NOT_FOUND);
 		
+		contact.getUser().removeContact(contact);
 		contactService.remove(id);
 		return new ResponseEntity<Void>(HttpStatus.OK);
 	}

@@ -92,7 +92,7 @@ public class AccountController {
 		account.setUsername(accountDTO.getUsername());
 		account.setPassword(accountDTO.getPassword());
 		account.setDisplayName(accountDTO.getDisplayName());
-		account.setUser(userService.findOne(accountDTO.getUser().getId()));
+		userService.findOne(accountDTO.getUser().getId()).addAccount(account);
 		
 		account = accountService.save(account);
 		return new ResponseEntity<AccountDTO>(new AccountDTO(account), HttpStatus.CREATED);
@@ -122,6 +122,7 @@ public class AccountController {
 		if (account == null)
 			return new ResponseEntity<Void>(HttpStatus.NOT_FOUND);
 		
+		account.getUser().removeAccount(account);
 		accountService.remove(id);
 		return new ResponseEntity<Void>(HttpStatus.OK);
 	}

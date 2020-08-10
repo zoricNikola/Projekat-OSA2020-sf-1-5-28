@@ -41,7 +41,7 @@ public class AttachmentController {
 		attachment.setData(attachmentDTO.getData());
 		attachment.setMimeType(attachmentDTO.getMimeType());
 		attachment.setName(attachmentDTO.getName());
-		attachment.setMessage(messageService.findOne(attachmentDTO.getMessage().getId()));
+		messageService.findOne(attachmentDTO.getMessage().getId()).addAttachment(attachment);
 		
 		attachment = attachmentService.save(attachment);
 		return new ResponseEntity<AttachmentDTO>(new AttachmentDTO(attachment), HttpStatus.CREATED);
@@ -53,6 +53,7 @@ public class AttachmentController {
 		if (attachment == null)
 			return new ResponseEntity<Void>(HttpStatus.NOT_FOUND);
 		
+		attachment.getMessage().removeAttachment(attachment);
 		attachmentService.remove(id);
 		return new ResponseEntity<Void>(HttpStatus.OK);
 	}

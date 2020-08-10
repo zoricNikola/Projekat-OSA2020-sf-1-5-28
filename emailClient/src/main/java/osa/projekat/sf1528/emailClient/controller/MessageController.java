@@ -95,11 +95,11 @@ public class MessageController {
 		message.setSubject(messageDTO.getSubject());
 		message.setContent(messageDTO.getContent());
 		message.setUnread(messageDTO.isUnread());
-		message.setAccount(accountService.findOne(messageDTO.getAccount().getId()));
-		message.setFolder(folderService.findOne(messageDTO.getFolder().getId()));
+		accountService.findOne(messageDTO.getAccount().getId()).addMessage(message);
+		folderService.findOne(messageDTO.getFolder().getId()).addMessage(message);
 		
 		for (TagDTO tagDTO : messageDTO.getTags()) {
-			message.getTags().add(tagService.findOne(tagDTO.getId()));
+			message.addTag(tagService.findOne(tagDTO.getId()));
 		}
 		
 		message = messageService.save(message);
@@ -111,6 +111,13 @@ public class MessageController {
 		Message message = messageService.findOne(id);
 		if (message == null)
 			return new ResponseEntity<Void>(HttpStatus.NOT_FOUND);
+		
+		message.getAccount().removeMessage(message);
+		message.getFolder().removeMessage(message);
+		
+		for (Tag tag : message.getTags()) {
+			message.removeTag(tag);
+		}
 		
 		messageService.remove(id);
 		return new ResponseEntity<Void>(HttpStatus.OK);

@@ -102,10 +102,10 @@ public class FolderController {
 		folder.setName(folderDTO.getName());
 		
 		if(folderDTO.getParent() != null && folderDTO.getParent().getId() != null){
-			folder.setParent(folderService.findOne(folderDTO.getParent().getId()));
+			folderService.findOne(folderDTO.getParent().getId()).addChildFolder(folder);
 		}
 		
-		folder.setAccount(accountService.findOne(folderDTO.getAccount().getId()));
+		accountService.findOne(folderDTO.getAccount().getId()).addFolder(folder);
 		
 		folder = folderService.save(folder);
 		return new ResponseEntity<FolderDTO>(new FolderDTO(folder), HttpStatus.CREATED);
@@ -117,11 +117,6 @@ public class FolderController {
 		if (folder == null)
 			return new ResponseEntity<FolderDTO>(HttpStatus.BAD_REQUEST);
 		folder.setName(folderDTO.getName());
-		if(folderDTO.getParent() != null && folderDTO.getParent().getId() != null){
-			folder.setParent(folderService.findOne(folderDTO.getParent().getId()));
-		}
-		
-		folder.setAccount(accountService.findOne(folderDTO.getAccount().getId()));
 		
 		folder = folderService.save(folder);
 		return new ResponseEntity<FolderDTO>(new FolderDTO(folder), HttpStatus.OK);
@@ -133,6 +128,8 @@ public class FolderController {
 		if (folder == null)
 			return new ResponseEntity<Void>(HttpStatus.NOT_FOUND);
 		
+		folder.getParent().removeChildFolder(folder);
+		folder.getAccount().removeFolder(folder);
 		folderService.remove(id);
 		return new ResponseEntity<Void>(HttpStatus.OK);
 	}

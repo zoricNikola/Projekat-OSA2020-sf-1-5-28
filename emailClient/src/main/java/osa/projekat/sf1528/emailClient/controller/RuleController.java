@@ -43,19 +43,20 @@ public class RuleController {
 		rule.setValue(ruleDTO.getValue());
 		rule.setCondition(ruleDTO.getCondition());
 		rule.setOperation(ruleDTO.getOperation());
-		rule.setDestination(folderService.findOne(ruleDTO.getDestination().getId()));
+		folderService.findOne(ruleDTO.getDestination().getId()).addRule(rule);
 		
 		rule = ruleService.save(rule);
 		return new ResponseEntity<RuleDTO>(new RuleDTO(rule), HttpStatus.CREATED);
 	}
 	
 	@DeleteMapping(value = "/{id}")
-	public ResponseEntity<Void> deleteAttachment(@PathVariable("id") Long id){
+	public ResponseEntity<Void> deleteRule(@PathVariable("id") Long id){
 		Rule rule = ruleService.findOne(id);
 		if(rule == null) {
 			return new ResponseEntity<Void>(HttpStatus.NOT_FOUND);
 		}
 		
+		rule.getDestination().removeRule(rule);
 		ruleService.remove(id);
 		return new ResponseEntity<Void>(HttpStatus.OK);
 	}
