@@ -132,15 +132,15 @@ public class TestController {
 	
 	@GetMapping(value = "/test")
 	public ResponseEntity<Void> test(){
-		long accountId = 4;
-		Folder folder = new Folder();
-		folder.setName("Novi folder");
 		
-		Account account = accountService.findOne(accountId);
+		Account account = accountService.findOne((long) 4);
 		if (account == null)
 			return new ResponseEntity<Void>(HttpStatus.BAD_REQUEST);
 		
-		account.addFolder(folder);
+		Folder folder = folderService.findOne((long) 11);
+		
+		account.removeFolder(folder);
+		folderService.remove(folder.getId());
 		
 		account = accountService.save(account);
 		

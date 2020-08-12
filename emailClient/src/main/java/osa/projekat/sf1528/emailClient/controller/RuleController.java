@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import osa.projekat.sf1528.emailClient.dto.RuleDTO;
+import osa.projekat.sf1528.emailClient.model.Folder;
 import osa.projekat.sf1528.emailClient.model.Rule;
 import osa.projekat.sf1528.emailClient.service.FolderService;
 import osa.projekat.sf1528.emailClient.service.RuleService;
@@ -37,13 +38,18 @@ public class RuleController {
 		
 	}
 	
-	@PostMapping(consumes = "application/json")
-	public ResponseEntity<RuleDTO> saveRule(@RequestBody RuleDTO ruleDTO){
+	@PostMapping(value = "/{folderId}", consumes = "application/json")
+	public ResponseEntity<RuleDTO> saveRule(@RequestBody RuleDTO ruleDTO, @PathVariable("folderId") Long folderId){
+		Folder folder = folderService.findOne(folderId);
+		if (folder == null) {
+			return new ResponseEntity<RuleDTO>(HttpStatus.BAD_REQUEST);
+		}
+		
 		Rule rule = new Rule();
 		rule.setValue(ruleDTO.getValue());
 		rule.setCondition(ruleDTO.getCondition());
 		rule.setOperation(ruleDTO.getOperation());
-		folderService.findOne(ruleDTO.getDestination().getId()).addRule(rule);
+		folder.addRule(rule);
 		
 		rule = ruleService.save(rule);
 		return new ResponseEntity<RuleDTO>(new RuleDTO(rule), HttpStatus.CREATED);

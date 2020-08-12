@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import osa.projekat.sf1528.emailClient.dto.AttachmentDTO;
 import osa.projekat.sf1528.emailClient.model.Attachment;
+import osa.projekat.sf1528.emailClient.model.Message;
 import osa.projekat.sf1528.emailClient.service.AttachmentService;
 import osa.projekat.sf1528.emailClient.service.MessageService;
 
@@ -35,13 +36,18 @@ public class AttachmentController {
 		return new ResponseEntity<AttachmentDTO>(new AttachmentDTO(attachment), HttpStatus.OK);
 	}
 	
-	@PostMapping(consumes = "application/json")
-	public ResponseEntity<AttachmentDTO> saveAttachment(@RequestBody AttachmentDTO attachmentDTO) {
+	@PostMapping(value = "/{messageId}", consumes = "application/json")
+	public ResponseEntity<AttachmentDTO> saveAttachment(@RequestBody AttachmentDTO attachmentDTO, @PathVariable("messageId") Long messageId) {
+		Message message = messageService.findOne(messageId);
+		if (message == null) {
+			return new ResponseEntity<AttachmentDTO>(HttpStatus.BAD_REQUEST);
+		}
+		
 		Attachment attachment = new Attachment();
 		attachment.setData(attachmentDTO.getData());
 		attachment.setMimeType(attachmentDTO.getMimeType());
 		attachment.setName(attachmentDTO.getName());
-		messageService.findOne(attachmentDTO.getMessage().getId()).addAttachment(attachment);
+		message.addAttachment(attachment);
 		
 		attachment = attachmentService.save(attachment);
 		return new ResponseEntity<AttachmentDTO>(new AttachmentDTO(attachment), HttpStatus.CREATED);

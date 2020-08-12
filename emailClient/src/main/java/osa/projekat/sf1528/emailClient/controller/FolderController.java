@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import osa.projekat.sf1528.emailClient.dto.FolderDTO;
 import osa.projekat.sf1528.emailClient.dto.MessageDTO;
 import osa.projekat.sf1528.emailClient.dto.RuleDTO;
+import osa.projekat.sf1528.emailClient.model.Account;
 import osa.projekat.sf1528.emailClient.model.Folder;
 import osa.projekat.sf1528.emailClient.model.Message;
 import osa.projekat.sf1528.emailClient.model.Rule;
@@ -81,6 +82,22 @@ public class FolderController {
 		return new ResponseEntity<List<FolderDTO>>(folderChildFolders, HttpStatus.OK);
 	}
 	
+	@PostMapping(value = "/{id}/childFolders", consumes = "application/json")
+	public ResponseEntity<FolderDTO> addFolderChildFolder(@RequestBody FolderDTO folderDTO, @PathVariable("id") Long id){
+		Folder parentFolder = folderService.findOne(id);
+		if(parentFolder == null) {
+			return new ResponseEntity<FolderDTO>(HttpStatus.BAD_REQUEST);
+		}
+		
+		Folder folder = new Folder();
+		folder.setName(folderDTO.getName());
+		parentFolder.addChildFolder(folder);
+		parentFolder.getAccount().addFolder(folder);
+		
+		folder = folderService.save(folder);
+		return new ResponseEntity<FolderDTO>(new FolderDTO(folder), HttpStatus.CREATED);
+	}
+	
 	@GetMapping(value="/{id}/rules")
 	public ResponseEntity<List<RuleDTO>> getFolderRules(@PathVariable("id") Long id) {
 		Folder folder = folderService.findOne(id);
@@ -96,20 +113,21 @@ public class FolderController {
 		return new ResponseEntity<List<RuleDTO>>(folderRules, HttpStatus.OK);
 	}
 	
-//	@PostMapping(consumes = "application/json")
-//	public ResponseEntity<FolderDTO> saveFolder(@RequestBody FolderDTO folderDTO) {
-//		Folder folder = new Folder();
-//		folder.setName(folderDTO.getName());
-//		
-////		if(folderDTO.getParent() != null && folderDTO.getParent().getId() != null){
-////			folderService.findOne(folderDTO.getParent().getId()).addChildFolder(folder);
-////		}
-////		
-////		accountService.findOne(folderDTO.getAccount().getId()).addFolder(folder);
-//		
-//		folder = folderService.save(folder);
-//		return new ResponseEntity<FolderDTO>(new FolderDTO(folder), HttpStatus.CREATED);
-//	}
+	@PostMapping(value = "/{accountId}", consumes = "application/json")
+	public ResponseEntity<FolderDTO> saveFolder(@RequestBody FolderDTO folderDTO, @PathVariable("accountId") Long accountId) {
+		Account account = accountService.findOne(accountId);
+		if(account == null) {
+			return new ResponseEntity<FolderDTO>(HttpStatus.BAD_REQUEST);
+		}
+		
+		Folder folder = new Folder();
+		folder.setName(folderDTO.getName());
+		folder.setParent(null);
+		account.addFolder(folder);
+		
+		folder = folderService.save(folder);
+		return new ResponseEntity<FolderDTO>(new FolderDTO(folder), HttpStatus.CREATED);
+	}
 	
 	@PutMapping(value = "/{id}", consumes = "application/json")
 	public ResponseEntity<FolderDTO> updateFolder(@RequestBody FolderDTO folderDTO, @PathVariable("id") Long id) {

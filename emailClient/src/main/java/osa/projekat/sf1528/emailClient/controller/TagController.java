@@ -20,6 +20,7 @@ import osa.projekat.sf1528.emailClient.dto.TagDTO;
 import osa.projekat.sf1528.emailClient.model.Account;
 import osa.projekat.sf1528.emailClient.model.Message;
 import osa.projekat.sf1528.emailClient.model.Tag;
+import osa.projekat.sf1528.emailClient.model.User;
 import osa.projekat.sf1528.emailClient.service.AccountService;
 import osa.projekat.sf1528.emailClient.service.MessageService;
 import osa.projekat.sf1528.emailClient.service.TagService;
@@ -70,15 +71,20 @@ public class TagController {
 		return new ResponseEntity<List<MessageDTO>>(tagMessages, HttpStatus.OK);
 	}
 	
-//	@PostMapping(consumes = "application/json")
-//	public ResponseEntity<TagDTO> saveTag(@RequestBody TagDTO tagDTO) {
-//		Tag tag = new Tag();
-//		tag.setName(tagDTO.getName());
-////		userService.findOne(tagDTO.getUser().getId()).addTag(tag);
-//
-//		tag = tagService.save(tag);
-//		return new ResponseEntity<TagDTO>(new TagDTO(tag), HttpStatus.CREATED);
-//	}
+	@PostMapping(value = "/{userId}", consumes = "application/json")
+	public ResponseEntity<TagDTO> saveTag(@RequestBody TagDTO tagDTO, @PathVariable("userId") Long userId) {
+		User user = userService.findOne(userId);
+		if(user == null) {
+			return new ResponseEntity<TagDTO>(HttpStatus.BAD_REQUEST);
+		}
+		
+		Tag tag = new Tag();
+		tag.setName(tagDTO.getName());
+		user.addTag(tag);
+
+		tag = tagService.save(tag);
+		return new ResponseEntity<TagDTO>(new TagDTO(tag), HttpStatus.CREATED);
+	}
 	
 	@DeleteMapping(value = "/{id}")
 	public ResponseEntity<Void> deleteTag(@PathVariable("id") Long id) {
