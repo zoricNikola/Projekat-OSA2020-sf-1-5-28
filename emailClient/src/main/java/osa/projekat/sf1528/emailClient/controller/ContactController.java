@@ -14,18 +14,18 @@ import org.springframework.web.bind.annotation.RestController;
 
 import osa.projekat.sf1528.emailClient.dto.ContactDTO;
 import osa.projekat.sf1528.emailClient.model.Contact;
-import osa.projekat.sf1528.emailClient.service.ContactServiceInterface;
-import osa.projekat.sf1528.emailClient.service.UserServiceInterface;
+import osa.projekat.sf1528.emailClient.service.ContactService;
+import osa.projekat.sf1528.emailClient.service.UserService;
 
 @RestController
 @RequestMapping(value = "api/contacts")
 public class ContactController {
 	
 	@Autowired
-	ContactServiceInterface contactService;
+	ContactService contactService;
 	
 	@Autowired
-	UserServiceInterface userService;
+	UserService userService;
 	
 	@GetMapping(value="/{id}")
 	public ResponseEntity<ContactDTO> getContact(@PathVariable("id") Long id) {
@@ -36,20 +36,20 @@ public class ContactController {
 		return new ResponseEntity<ContactDTO>(new ContactDTO(contact), HttpStatus.OK);
 	}
 	
-	@PostMapping(consumes = "application/json")
-	public ResponseEntity<ContactDTO> saveContact(@RequestBody ContactDTO contactDTO) {
-		Contact contact = new Contact();
-		contact.setFirstName(contactDTO.getFirstName());
-		contact.setLastName(contactDTO.getLastName());
-		contact.setDisplayName(contactDTO.getDisplayName());
-		contact.setEmail(contactDTO.getEmail());
-		contact.setNote(contactDTO.getNote());
-		contact.setPhotoPath(contactDTO.getPhotoPath());
-		userService.findOne(contactDTO.getUser().getId()).addContact(contact);
-		
-		contact = contactService.save(contact);
-		return new ResponseEntity<ContactDTO>(new ContactDTO(contact), HttpStatus.CREATED);
-	}
+//	@PostMapping(consumes = "application/json")
+//	public ResponseEntity<ContactDTO> saveContact(@RequestBody ContactDTO contactDTO) {
+//		Contact contact = new Contact();
+//		contact.setFirstName(contactDTO.getFirstName());
+//		contact.setLastName(contactDTO.getLastName());
+//		contact.setDisplayName(contactDTO.getDisplayName());
+//		contact.setEmail(contactDTO.getEmail());
+//		contact.setNote(contactDTO.getNote());
+//		contact.setPhotoPath(contactDTO.getPhotoPath());
+////		userService.findOne(contactDTO.getUser().getId()).addContact(contact);
+//		
+//		contact = contactService.save(contact);
+//		return new ResponseEntity<ContactDTO>(new ContactDTO(contact), HttpStatus.CREATED);
+//	}
 	
 	@PutMapping(value = "/{id}", consumes = "application/json")
 	public ResponseEntity<ContactDTO> updateContact(@RequestBody ContactDTO contactDTO, @PathVariable("id") Long id) {

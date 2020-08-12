@@ -13,18 +13,18 @@ import org.springframework.web.bind.annotation.RestController;
 
 import osa.projekat.sf1528.emailClient.dto.AttachmentDTO;
 import osa.projekat.sf1528.emailClient.model.Attachment;
-import osa.projekat.sf1528.emailClient.service.AttachmentServiceInterface;
-import osa.projekat.sf1528.emailClient.service.MessageServiceInterface;
+import osa.projekat.sf1528.emailClient.service.AttachmentService;
+import osa.projekat.sf1528.emailClient.service.MessageService;
 
 @RestController
 @RequestMapping(value = "api/attachments")
 public class AttachmentController {
 
 	@Autowired
-	AttachmentServiceInterface attachmentService;
+	AttachmentService attachmentService;
 	
 	@Autowired
-	MessageServiceInterface messageService;
+	MessageService messageService;
 	
 	@GetMapping(value="/{id}")
 	public ResponseEntity<AttachmentDTO> getAttachment(@PathVariable("id") Long id) {

@@ -22,12 +22,10 @@ public class ContactDTO implements Serializable {
 	
 	private String photoPath;
 	
-	private UserDTO user;
-	
 	public ContactDTO() {}
 
 	public ContactDTO(Long id, String firstName, String lastName, String displayName, String email, String note,
-			String photoPath, UserDTO user) {
+			String photoPath) {
 		super();
 		this.id = id;
 		this.firstName = firstName;
@@ -36,12 +34,11 @@ public class ContactDTO implements Serializable {
 		this.email = email;
 		this.note = note;
 		this.photoPath = photoPath;
-		this.user = user;
 	}
 	
 	public ContactDTO(Contact contact) {
 		this(contact.getId(), contact.getFirstName(), contact.getLastName(), contact.getDisplayName(), contact.getEmail(), 
-				contact.getNote(), contact.getPhotoPath(), new UserDTO(contact.getUser()));
+				contact.getNote(), contact.getPhotoPath());
 	}
 
 	public Long getId() {
@@ -104,14 +101,5 @@ public class ContactDTO implements Serializable {
 		return serialVersionUID;
 	}
 
-	public UserDTO getUser() {
-		return user;
-	}
-
-	public void setUser(UserDTO user) {
-		this.user = user;
-	}
-	
-	
 	
 }

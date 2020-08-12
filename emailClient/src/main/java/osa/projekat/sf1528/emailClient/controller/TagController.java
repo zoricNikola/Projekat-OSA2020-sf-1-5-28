@@ -20,26 +20,26 @@ import osa.projekat.sf1528.emailClient.dto.TagDTO;
 import osa.projekat.sf1528.emailClient.model.Account;
 import osa.projekat.sf1528.emailClient.model.Message;
 import osa.projekat.sf1528.emailClient.model.Tag;
-import osa.projekat.sf1528.emailClient.service.AccountServiceInterface;
-import osa.projekat.sf1528.emailClient.service.MessageServiceInterface;
-import osa.projekat.sf1528.emailClient.service.TagServiceInterface;
-import osa.projekat.sf1528.emailClient.service.UserServiceInterface;
+import osa.projekat.sf1528.emailClient.service.AccountService;
+import osa.projekat.sf1528.emailClient.service.MessageService;
+import osa.projekat.sf1528.emailClient.service.TagService;
+import osa.projekat.sf1528.emailClient.service.UserService;
 
 @RestController
 @RequestMapping(value = "api/tags")
 public class TagController {
 	
 	@Autowired
-	TagServiceInterface tagService;
+	TagService tagService;
 	
 	@Autowired
-	UserServiceInterface userService;
+	UserService userService;
 	
 	@Autowired
-	AccountServiceInterface accountService;
+	AccountService accountService;
 	
 	@Autowired
-	MessageServiceInterface messageService;
+	MessageService messageService;
 	
 	@GetMapping(value="/{id}")
 	public ResponseEntity<TagDTO> getTag(@PathVariable("id") Long id) {
@@ -70,15 +70,15 @@ public class TagController {
 		return new ResponseEntity<List<MessageDTO>>(tagMessages, HttpStatus.OK);
 	}
 	
-	@PostMapping(consumes = "application/json")
-	public ResponseEntity<TagDTO> saveTag(@RequestBody TagDTO tagDTO) {
-		Tag tag = new Tag();
-		tag.setName(tagDTO.getName());
-		userService.findOne(tagDTO.getUser().getId()).addTag(tag);
-
-		tag = tagService.save(tag);
-		return new ResponseEntity<TagDTO>(new TagDTO(tag), HttpStatus.CREATED);
-	}
+//	@PostMapping(consumes = "application/json")
+//	public ResponseEntity<TagDTO> saveTag(@RequestBody TagDTO tagDTO) {
+//		Tag tag = new Tag();
+//		tag.setName(tagDTO.getName());
+////		userService.findOne(tagDTO.getUser().getId()).addTag(tag);
+//
+//		tag = tagService.save(tag);
+//		return new ResponseEntity<TagDTO>(new TagDTO(tag), HttpStatus.CREATED);
+//	}
 	
 	@DeleteMapping(value = "/{id}")
 	public ResponseEntity<Void> deleteTag(@PathVariable("id") Long id) {

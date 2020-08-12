@@ -22,26 +22,26 @@ import osa.projekat.sf1528.emailClient.model.Account;
 import osa.projekat.sf1528.emailClient.model.Contact;
 import osa.projekat.sf1528.emailClient.model.Tag;
 import osa.projekat.sf1528.emailClient.model.User;
-import osa.projekat.sf1528.emailClient.service.AccountServiceInterface;
-import osa.projekat.sf1528.emailClient.service.ContactServiceInterface;
-import osa.projekat.sf1528.emailClient.service.TagServiceInterface;
-import osa.projekat.sf1528.emailClient.service.UserServiceInterface;
+import osa.projekat.sf1528.emailClient.service.AccountService;
+import osa.projekat.sf1528.emailClient.service.ContactService;
+import osa.projekat.sf1528.emailClient.service.TagService;
+import osa.projekat.sf1528.emailClient.service.UserService;
 
 @RestController
 @RequestMapping(value = "api/users")
 public class UserController {
 	
 	@Autowired
-	UserServiceInterface userService;
+	UserService userService;
 	
 	@Autowired
-	TagServiceInterface tagService;
+	TagService tagService;
 	
 	@Autowired
-	AccountServiceInterface accountService;
+	AccountService accountService;
 	
 	@Autowired
-	ContactServiceInterface contactService;
+	ContactService contactService;
 	
 	@GetMapping(value = "/{id}")
 	public ResponseEntity<UserDTO> getUser(@PathVariable("id") Long id){

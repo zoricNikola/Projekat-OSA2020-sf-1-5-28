@@ -13,18 +13,18 @@ import org.springframework.web.bind.annotation.RestController;
 
 import osa.projekat.sf1528.emailClient.dto.RuleDTO;
 import osa.projekat.sf1528.emailClient.model.Rule;
-import osa.projekat.sf1528.emailClient.service.FolderServiceInterface;
-import osa.projekat.sf1528.emailClient.service.RuleServiceInterface;
+import osa.projekat.sf1528.emailClient.service.FolderService;
+import osa.projekat.sf1528.emailClient.service.RuleService;
 
 @RestController
 @RequestMapping(value = "api/rules")
 public class RuleController {
 	
 	@Autowired
-	RuleServiceInterface ruleService;
+	RuleService ruleService;
 	
 	@Autowired
-	FolderServiceInterface folderService;
+	FolderService folderService;
 	
 	@GetMapping(value = "/{id}")
 	public ResponseEntity<RuleDTO> getRule (@PathVariable("id") Long id){

@@ -12,24 +12,16 @@ public class FolderDTO implements Serializable {
 	
 	private String name;
 	
-	private FolderDTO parent;
-	
-	private AccountDTO account;
-	
 	public FolderDTO() {}
 	
-	public FolderDTO(Long id, String name, FolderDTO parent, AccountDTO account) {
+	public FolderDTO(Long id, String name) {
 		super();
 		this.id = id;
 		this.name = name;
-		this.parent = parent;
-		this.account = account;
 	}
 	
 	public FolderDTO(Folder folder) {
-		this(folder.getId(), folder.getName(), 
-				(folder.getParent() != null && folder.getParent().getId() != null)?new FolderDTO(folder.getParent()):new FolderDTO(), 
-				new AccountDTO(folder.getAccount()));
+		this(folder.getId(), folder.getName());
 	}
 
 	public Long getId() {
@@ -50,22 +42,6 @@ public class FolderDTO implements Serializable {
 
 	public static long getSerialversionuid() {
 		return serialVersionUID;
-	}
-
-	public FolderDTO getParent() {
-		return parent;
-	}
-
-	public void setParent(FolderDTO parent) {
-		this.parent = parent;
-	}
-
-	public AccountDTO getAccount() {
-		return account;
-	}
-
-	public void setAccount(AccountDTO account) {
-		this.account = account;
 	}
 
 }

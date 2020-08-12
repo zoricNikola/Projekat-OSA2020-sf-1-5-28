@@ -12,19 +12,16 @@ public class TagDTO implements Serializable {
 	
 	private String name;
 	
-	private UserDTO user;
-	
 	public TagDTO() {}
 
-	public TagDTO(Long id, String name, UserDTO user) {
+	public TagDTO(Long id, String name) {
 		super();
 		this.id = id;
 		this.name = name;
-		this.user = user;
 	}
 	
 	public TagDTO(Tag tag) {
-		this(tag.getId(), tag.getName(), new UserDTO(tag.getUser()));
+		this(tag.getId(), tag.getName());
 	}
 
 	public Long getId() {
@@ -46,14 +43,5 @@ public class TagDTO implements Serializable {
 	public static long getSerialversionuid() {
 		return serialVersionUID;
 	}
-
-	public UserDTO getUser() {
-		return user;
-	}
-
-	public void setUser(UserDTO user) {
-		this.user = user;
-	}
-	
 
 }

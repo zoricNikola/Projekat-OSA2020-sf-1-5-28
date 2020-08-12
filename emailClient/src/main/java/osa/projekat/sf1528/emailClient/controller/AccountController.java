@@ -21,26 +21,26 @@ import osa.projekat.sf1528.emailClient.dto.MessageDTO;
 import osa.projekat.sf1528.emailClient.model.Account;
 import osa.projekat.sf1528.emailClient.model.Folder;
 import osa.projekat.sf1528.emailClient.model.Message;
-import osa.projekat.sf1528.emailClient.service.AccountServiceInterface;
-import osa.projekat.sf1528.emailClient.service.FolderServiceInterface;
-import osa.projekat.sf1528.emailClient.service.MessageServiceInterface;
-import osa.projekat.sf1528.emailClient.service.UserServiceInterface;
+import osa.projekat.sf1528.emailClient.service.AccountService;
+import osa.projekat.sf1528.emailClient.service.FolderService;
+import osa.projekat.sf1528.emailClient.service.MessageService;
+import osa.projekat.sf1528.emailClient.service.UserService;
 
 @RestController
 @RequestMapping(value = "api/accounts")
 public class AccountController {
 	
 	@Autowired
-	AccountServiceInterface accountService;
+	AccountService accountService;
 	
 	@Autowired
-	UserServiceInterface userService;
+	UserService userService;
 	
 	@Autowired
-	MessageServiceInterface messageService;
+	MessageService messageService;
 	
 	@Autowired
-	FolderServiceInterface folderService;
+	FolderService folderService;
 	
 	@GetMapping(value="/{id}")
 	public ResponseEntity<AccountDTO> getAccount(@PathVariable("id") Long id) {
@@ -81,22 +81,22 @@ public class AccountController {
 		return new ResponseEntity<List<FolderDTO>>(accountFolders, HttpStatus.OK);
 	}
 	
-	@PostMapping(consumes = "application/json")
-	public ResponseEntity<AccountDTO> saveAccount(@RequestBody AccountDTO accountDTO) {
-		Account account = new Account();
-		account.setSmtpAddress(accountDTO.getSmtpAddress());
-		account.setSmtpPort(accountDTO.getSmtpPort());
-		account.setInServerType(accountDTO.getInServerType());
-		account.setInServerAddress(accountDTO.getInServerAddress());
-		account.setInServerPort(accountDTO.getInServerPort());
-		account.setUsername(accountDTO.getUsername());
-		account.setPassword(accountDTO.getPassword());
-		account.setDisplayName(accountDTO.getDisplayName());
-		userService.findOne(accountDTO.getUser().getId()).addAccount(account);
-		
-		account = accountService.save(account);
-		return new ResponseEntity<AccountDTO>(new AccountDTO(account), HttpStatus.CREATED);
-	}
+//	@PostMapping(consumes = "application/json")
+//	public ResponseEntity<AccountDTO> saveAccount(@RequestBody AccountDTO accountDTO) {
+//		Account account = new Account();
+//		account.setSmtpAddress(accountDTO.getSmtpAddress());
+//		account.setSmtpPort(accountDTO.getSmtpPort());
+//		account.setInServerType(accountDTO.getInServerType());
+//		account.setInServerAddress(accountDTO.getInServerAddress());
+//		account.setInServerPort(accountDTO.getInServerPort());
+//		account.setUsername(accountDTO.getUsername());
+//		account.setPassword(accountDTO.getPassword());
+//		account.setDisplayName(accountDTO.getDisplayName());
+////		userService.findOne(accountDTO.getUser().getId()).addAccount(account);
+//		
+//		account = accountService.save(account);
+//		return new ResponseEntity<AccountDTO>(new AccountDTO(account), HttpStatus.CREATED);
+//	}
 	
 	@PutMapping(value = "/{id}", consumes = "application/json")
 	public ResponseEntity<AccountDTO> updateAccount(@RequestBody AccountDTO accountDTO, @PathVariable("id") Long id) {

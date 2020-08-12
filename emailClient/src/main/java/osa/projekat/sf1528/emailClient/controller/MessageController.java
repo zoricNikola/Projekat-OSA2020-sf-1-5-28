@@ -20,30 +20,30 @@ import osa.projekat.sf1528.emailClient.dto.TagDTO;
 import osa.projekat.sf1528.emailClient.model.Attachment;
 import osa.projekat.sf1528.emailClient.model.Message;
 import osa.projekat.sf1528.emailClient.model.Tag;
-import osa.projekat.sf1528.emailClient.service.AccountServiceInterface;
-import osa.projekat.sf1528.emailClient.service.AttachmentServiceInterface;
-import osa.projekat.sf1528.emailClient.service.FolderServiceInterface;
-import osa.projekat.sf1528.emailClient.service.MessageServiceInterface;
-import osa.projekat.sf1528.emailClient.service.TagServiceInterface;
+import osa.projekat.sf1528.emailClient.service.AccountService;
+import osa.projekat.sf1528.emailClient.service.AttachmentService;
+import osa.projekat.sf1528.emailClient.service.FolderService;
+import osa.projekat.sf1528.emailClient.service.MessageService;
+import osa.projekat.sf1528.emailClient.service.TagService;
 
 @RestController
 @RequestMapping(value = "api/messages")
 public class MessageController {
 	
 	@Autowired
-	MessageServiceInterface messageService;
+	MessageService messageService;
 	
 	@Autowired
-	AccountServiceInterface accountService;
+	AccountService accountService;
 	
 	@Autowired
-	FolderServiceInterface folderService;
+	FolderService folderService;
 	
 	@Autowired
-	TagServiceInterface tagService;
+	TagService tagService;
 	
 	@Autowired
-	AttachmentServiceInterface attachmentService;
+	AttachmentService attachmentService;
 
 	@GetMapping(value="/{id}")
 	public ResponseEntity<MessageDTO> getMessage(@PathVariable("id") Long id) {

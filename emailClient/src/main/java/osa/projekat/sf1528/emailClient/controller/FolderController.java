@@ -21,26 +21,26 @@ import osa.projekat.sf1528.emailClient.dto.RuleDTO;
 import osa.projekat.sf1528.emailClient.model.Folder;
 import osa.projekat.sf1528.emailClient.model.Message;
 import osa.projekat.sf1528.emailClient.model.Rule;
-import osa.projekat.sf1528.emailClient.service.AccountServiceInterface;
-import osa.projekat.sf1528.emailClient.service.FolderServiceInterface;
-import osa.projekat.sf1528.emailClient.service.MessageServiceInterface;
-import osa.projekat.sf1528.emailClient.service.RuleServiceInterface;
+import osa.projekat.sf1528.emailClient.service.AccountService;
+import osa.projekat.sf1528.emailClient.service.FolderService;
+import osa.projekat.sf1528.emailClient.service.MessageService;
+import osa.projekat.sf1528.emailClient.service.RuleService;
 
 @RestController
 @RequestMapping(value = "api/folders")
 public class FolderController {
 	
 	@Autowired
-	FolderServiceInterface folderService;
+	FolderService folderService;
 	
 	@Autowired
-	MessageServiceInterface messageService;
+	MessageService messageService;
 	
 	@Autowired
-	RuleServiceInterface ruleService;
+	RuleService ruleService;
 	
 	@Autowired
-	AccountServiceInterface accountService;
+	AccountService accountService;
 	
 	@GetMapping(value="/{id}")
 	public ResponseEntity<FolderDTO> getFolder(@PathVariable("id") Long id) {
@@ -96,20 +96,20 @@ public class FolderController {
 		return new ResponseEntity<List<RuleDTO>>(folderRules, HttpStatus.OK);
 	}
 	
-	@PostMapping(consumes = "application/json")
-	public ResponseEntity<FolderDTO> saveFolder(@RequestBody FolderDTO folderDTO) {
-		Folder folder = new Folder();
-		folder.setName(folderDTO.getName());
-		
-		if(folderDTO.getParent() != null && folderDTO.getParent().getId() != null){
-			folderService.findOne(folderDTO.getParent().getId()).addChildFolder(folder);
-		}
-		
-		accountService.findOne(folderDTO.getAccount().getId()).addFolder(folder);
-		
-		folder = folderService.save(folder);
-		return new ResponseEntity<FolderDTO>(new FolderDTO(folder), HttpStatus.CREATED);
-	}
+//	@PostMapping(consumes = "application/json")
+//	public ResponseEntity<FolderDTO> saveFolder(@RequestBody FolderDTO folderDTO) {
+//		Folder folder = new Folder();
+//		folder.setName(folderDTO.getName());
+//		
+////		if(folderDTO.getParent() != null && folderDTO.getParent().getId() != null){
+////			folderService.findOne(folderDTO.getParent().getId()).addChildFolder(folder);
+////		}
+////		
+////		accountService.findOne(folderDTO.getAccount().getId()).addFolder(folder);
+//		
+//		folder = folderService.save(folder);
+//		return new ResponseEntity<FolderDTO>(new FolderDTO(folder), HttpStatus.CREATED);
+//	}
 	
 	@PutMapping(value = "/{id}", consumes = "application/json")
 	public ResponseEntity<FolderDTO> updateFolder(@RequestBody FolderDTO folderDTO, @PathVariable("id") Long id) {
