@@ -21,7 +21,10 @@ import osa.projekat.sf1528.emailClient.dto.MessageDTO;
 import osa.projekat.sf1528.emailClient.model.Account;
 import osa.projekat.sf1528.emailClient.model.Folder;
 import osa.projekat.sf1528.emailClient.model.Message;
+import osa.projekat.sf1528.emailClient.model.Rule;
 import osa.projekat.sf1528.emailClient.model.User;
+import osa.projekat.sf1528.emailClient.model.Rule.Condition;
+import osa.projekat.sf1528.emailClient.model.Rule.Operation;
 import osa.projekat.sf1528.emailClient.service.AccountService;
 import osa.projekat.sf1528.emailClient.service.FolderService;
 import osa.projekat.sf1528.emailClient.service.MessageService;
@@ -99,6 +102,25 @@ public class AccountController {
 		account.setPassword(accountDTO.getPassword());
 		account.setDisplayName(accountDTO.getDisplayName());
 		user.addAccount(account);
+		
+		Folder f1 = new Folder();
+		f1.setName("Inbox");
+		Rule r1 = new Rule();
+		r1.setCondition(Condition.TO);
+		r1.setValue(account.getUsername());
+		r1.setOperation(Operation.MOVE);
+		f1.addRule(r1);
+		
+		Folder f2 = new Folder();
+		f2.setName("Sent");
+		Rule r2 = new Rule();
+		r2.setCondition(Condition.FROM);
+		r2.setValue(account.getUsername());
+		r2.setOperation(Operation.MOVE);
+		f2.addRule(r2);
+		
+		account.addFolder(f1);
+		account.addFolder(f2);
 		
 		account = accountService.save(account);
 		return new ResponseEntity<AccountDTO>(new AccountDTO(account), HttpStatus.CREATED);
