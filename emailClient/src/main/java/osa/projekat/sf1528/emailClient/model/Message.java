@@ -205,5 +205,23 @@ public class Message implements Serializable {
 	public static long getSerialversionuid() {
 		return serialVersionUID;
 	}
+	
+	public static Message copyOf(Message message) {
+		Message copy = new Message();
+		copy.setFrom(message.getFrom());
+		copy.setTo(message.getTo());
+		copy.setCc(message.getCc());
+		copy.setBcc(message.getBcc());
+		copy.setDateTime(message.getDateTime());
+		copy.setSubject(message.getSubject());
+		copy.setContent(message.getContent());
+		copy.setUnread(message.unread);
+		copy.setAccount(message.getAccount());
+		copy.setFolder(message.getFolder());
+		copy.setTags(message.getTags());
+		copy.setAttachments(message.getAttachments());
+		
+		return copy;
+	}
 
 }

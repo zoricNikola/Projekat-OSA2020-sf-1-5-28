@@ -83,4 +83,53 @@ public class Rule implements Serializable{
 		return serialVersionUID;
 	}
 	
+	public Message doRule(Message message) {
+		switch(this.condition) {
+			case TO: {
+				if (message.getTo().contains(this.value)) {
+					return this.doOperation(message);
+				}
+				break;
+			}
+			case FROM: {
+				if (message.getFrom().contains(this.value)) {
+					return this.doOperation(message);	
+				}
+				break;
+			}
+			case CC: {
+				if (message.getCc().contains(this.value)) {
+					return this.doOperation(message);
+				}
+				break;
+			}
+			case SUBJECT: {
+				if (message.getSubject().contains(this.value)) {
+					return this.doOperation(message);
+				}
+				break;
+			}
+		}
+		return null;
+	}
+	
+	private Message doOperation(Message message) {
+		switch(this.operation) {
+			case MOVE: {
+				this.destination.addMessage(message);
+				return message;
+			}
+			case COPY: {
+				Message copy = Message.copyOf(message);
+				this.destination.addMessage(copy);
+				return copy;
+			}
+			case DELETE: {
+				return null;
+			}
+			default: {
+				return null;
+			}
+		}
+	}
 }

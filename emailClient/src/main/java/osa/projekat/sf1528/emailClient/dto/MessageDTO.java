@@ -30,16 +30,12 @@ public class MessageDTO implements Serializable {
 	
 	private boolean unread;
 	
-	private AccountDTO account;
-	
-	private FolderDTO folder;
-	
-	private Set<TagDTO> tags;
+	private Set<TagDTO> tags = new HashSet<TagDTO>();
 	
 	public MessageDTO() {}
 
 	public MessageDTO(Long id, String from, String to, String cc, String bcc, LocalDateTime dateTime, String subject,
-			String content, boolean unread, AccountDTO account, FolderDTO folder) {
+			String content, boolean unread) {
 		super();
 		this.id = id;
 		this.from = from;
@@ -50,14 +46,11 @@ public class MessageDTO implements Serializable {
 		this.subject = subject;
 		this.content = content;
 		this.unread = unread;
-		this.account = account;
-		this.folder = folder;
 	}
 
 	public MessageDTO(Message message) {
 		this(message.getId(), message.getFrom(), message.getTo(), message.getCc(), message.getBcc(), message.getDateTime(), 
-				message.getSubject(), message.getContent(), message.isUnread(), new AccountDTO(message.getAccount()), new FolderDTO(message.getFolder()));
-		this.tags = new HashSet<TagDTO>();
+				message.getSubject(), message.getContent(), message.isUnread());
 		
 		for (Tag tag : message.getTags()) {
 			this.tags.add(new TagDTO(tag));
@@ -138,22 +131,6 @@ public class MessageDTO implements Serializable {
 
 	public static long getSerialversionuid() {
 		return serialVersionUID;
-	}
-
-	public AccountDTO getAccount() {
-		return account;
-	}
-
-	public void setAccount(AccountDTO account) {
-		this.account = account;
-	}
-
-	public FolderDTO getFolder() {
-		return folder;
-	}
-
-	public void setFolder(FolderDTO folder) {
-		this.folder = folder;
 	}
 
 	public Set<TagDTO> getTags() {
