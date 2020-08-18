@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -44,12 +45,16 @@ public class UserController {
 	@Autowired
 	ContactService contactService;
 	
+	@Autowired
+	private PasswordEncoder passwordEncoder;
+	
 	@GetMapping(value = "/{id}")
 	public ResponseEntity<UserDTO> getUser(@PathVariable("id") Long id){
 		User user = userService.findOne(id);		
 		if(user == null) {
 			return new ResponseEntity<UserDTO>(HttpStatus.NOT_FOUND);
 		}
+		user.setPassword(null);
 		
 		return new ResponseEntity<UserDTO>(new UserDTO(user), HttpStatus.OK);
 	}
@@ -102,17 +107,17 @@ public class UserController {
 		return new ResponseEntity<List<TagDTO>>(userTags, HttpStatus.OK);
 	}
 	
-	@PostMapping(consumes = "application/json")
-	public ResponseEntity<UserDTO> saveUser(@RequestBody UserDTO userDTO){
-		User user = new User();
-		user.setUsername(userDTO.getUsername());
-		user.setPassword(userDTO.getPassword());
-		user.setFirstName(userDTO.getFirstName());
-		user.setLastName(userDTO.getLastName());
-		
-		user = userService.save(user);
-		return new ResponseEntity<UserDTO>(new UserDTO(user), HttpStatus.CREATED);
-	}
+//	@PostMapping(consumes = "application/json")
+//	public ResponseEntity<UserDTO> saveUser(@RequestBody UserDTO userDTO){
+//		User user = new User();
+//		user.setUsername(userDTO.getUsername());
+//		user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
+//		user.setFirstName(userDTO.getFirstName());
+//		user.setLastName(userDTO.getLastName());
+//		
+//		user = userService.save(user);
+//		return new ResponseEntity<UserDTO>(new UserDTO(user), HttpStatus.CREATED);
+//	}
 	
 	@PutMapping(value = "/{id}", consumes = "application/json")
 	public ResponseEntity<UserDTO> updateUser(@RequestBody UserDTO userDTO, @PathVariable("id") Long id){
@@ -122,11 +127,12 @@ public class UserController {
 		}
 		
 		user.setUsername(userDTO.getUsername());
-		user.setPassword(userDTO.getPassword());
+		user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
 		user.setFirstName(userDTO.getFirstName());
 		user.setLastName(userDTO.getLastName());
 		
 		user = userService.save(user);
+		user.setPassword(null);
 		return new ResponseEntity<UserDTO>(new UserDTO(user), HttpStatus.OK);
 	}
 	

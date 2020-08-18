@@ -18,13 +18,8 @@ public class UserService implements UserServiceInterface{
 	}
 	
 	@Override
-	public User findByUsernameAndPassword(String username, String password) {
-		User user = userRepository.findByUsername(username);
-		if(user.getPassword().equals(password)) {
-			return user;
-		}else {
-			return null;
-		}
+	public User findByUsername(String username) {
+		return userRepository.findByUsername(username);
 	}
 	
 	@Override 
