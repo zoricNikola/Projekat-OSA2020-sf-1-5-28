@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,10 +23,12 @@ import osa.projekat.sf1528.emailClient.model.Account;
 import osa.projekat.sf1528.emailClient.model.Folder;
 import osa.projekat.sf1528.emailClient.model.Message;
 import osa.projekat.sf1528.emailClient.model.Rule;
+import osa.projekat.sf1528.emailClient.model.User;
 import osa.projekat.sf1528.emailClient.service.AccountService;
 import osa.projekat.sf1528.emailClient.service.FolderService;
 import osa.projekat.sf1528.emailClient.service.MessageService;
 import osa.projekat.sf1528.emailClient.service.RuleService;
+import osa.projekat.sf1528.emailClient.service.UserService;
 
 @RestController
 @RequestMapping(value = "api/folders")
@@ -41,22 +44,47 @@ public class FolderController {
 	RuleService ruleService;
 	
 	@Autowired
+	UserService userService;
+	
+	@Autowired
 	AccountService accountService;
+	
+	private boolean userOwnsFolder(User user, Folder folder) {
+		return user.getId() == folder.getAccount().getUser().getId();
+	}
 	
 	@GetMapping(value="/{id}")
 	public ResponseEntity<FolderDTO> getFolder(@PathVariable("id") Long id) {
+		User user = userService.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName());
+		
+		if (user == null)
+			return new ResponseEntity<FolderDTO>(HttpStatus.UNAUTHORIZED);
+		
 		Folder folder = folderService.findOne(id);
+		
 		if (folder == null)
 			return new ResponseEntity<FolderDTO>(HttpStatus.NOT_FOUND);
+		
+		if (!userOwnsFolder(user, folder))
+			return new ResponseEntity<FolderDTO>(HttpStatus.UNAUTHORIZED);
 		
 		return new ResponseEntity<FolderDTO>(new FolderDTO(folder), HttpStatus.OK);
 	}
 	
 	@GetMapping(value="/{id}/messages")
 	public ResponseEntity<List<MessageDTO>> getFolderMessages(@PathVariable("id") Long id) {
+		User user = userService.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName());
+		
+		if (user == null)
+			return new ResponseEntity<List<MessageDTO>>(HttpStatus.UNAUTHORIZED);
+		
 		Folder folder = folderService.findOne(id);
+		
 		if (folder == null)
 			return new ResponseEntity<List<MessageDTO>>(HttpStatus.NOT_FOUND);
+		
+		if (!userOwnsFolder(user, folder))
+			return new ResponseEntity<List<MessageDTO>>(HttpStatus.UNAUTHORIZED);
 		
 		List<Message> messages = messageService.findByFolder(folder);
 		List<MessageDTO> folderMessages = new ArrayList<MessageDTO>();
@@ -69,9 +97,18 @@ public class FolderController {
 	
 	@GetMapping(value="/{id}/childFolders")
 	public ResponseEntity<List<FolderDTO>> getFolderChildFolders(@PathVariable("id") Long id) {
+		User user = userService.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName());
+		
+		if (user == null)
+			return new ResponseEntity<List<FolderDTO>>(HttpStatus.UNAUTHORIZED);
+		
 		Folder parentFolder = folderService.findOne(id);
+		
 		if (parentFolder == null)
 			return new ResponseEntity<List<FolderDTO>>(HttpStatus.NOT_FOUND);
+		
+		if (!userOwnsFolder(user, parentFolder))
+			return new ResponseEntity<List<FolderDTO>>(HttpStatus.UNAUTHORIZED);
 		
 		List<Folder> folders = folderService.findByParent(parentFolder);
 		List<FolderDTO> folderChildFolders = new ArrayList<FolderDTO>();
@@ -84,10 +121,18 @@ public class FolderController {
 	
 	@PostMapping(value = "/{id}/childFolders", consumes = "application/json")
 	public ResponseEntity<FolderDTO> addFolderChildFolder(@RequestBody FolderDTO folderDTO, @PathVariable("id") Long id){
+		User user = userService.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName());
+		
+		if (user == null)
+			return new ResponseEntity<FolderDTO>(HttpStatus.UNAUTHORIZED);
+		
 		Folder parentFolder = folderService.findOne(id);
-		if(parentFolder == null) {
+		
+		if (parentFolder == null)
 			return new ResponseEntity<FolderDTO>(HttpStatus.BAD_REQUEST);
-		}
+		
+		if (!userOwnsFolder(user, parentFolder))
+			return new ResponseEntity<FolderDTO>(HttpStatus.UNAUTHORIZED);
 		
 		Folder folder = new Folder();
 		folder.setName(folderDTO.getName());
@@ -100,9 +145,18 @@ public class FolderController {
 	
 	@GetMapping(value="/{id}/rules")
 	public ResponseEntity<List<RuleDTO>> getFolderRules(@PathVariable("id") Long id) {
+		User user = userService.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName());
+		
+		if (user == null)
+			return new ResponseEntity<List<RuleDTO>>(HttpStatus.UNAUTHORIZED);
+		
 		Folder folder = folderService.findOne(id);
+		
 		if (folder == null)
 			return new ResponseEntity<List<RuleDTO>>(HttpStatus.NOT_FOUND);
+		
+		if (!userOwnsFolder(user, folder))
+			return new ResponseEntity<List<RuleDTO>>(HttpStatus.UNAUTHORIZED);
 		
 		List<Rule> rules = ruleService.findByDestination(folder);
 		List<RuleDTO> folderRules = new ArrayList<RuleDTO>();
@@ -115,10 +169,18 @@ public class FolderController {
 	
 	@PostMapping(value = "/{accountId}", consumes = "application/json")
 	public ResponseEntity<FolderDTO> saveFolder(@RequestBody FolderDTO folderDTO, @PathVariable("accountId") Long accountId) {
+		User user = userService.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName());
+		
+		if (user == null)
+			return new ResponseEntity<FolderDTO>(HttpStatus.UNAUTHORIZED);
+		
 		Account account = accountService.findOne(accountId);
-		if(account == null) {
+		
+		if (account == null)
 			return new ResponseEntity<FolderDTO>(HttpStatus.BAD_REQUEST);
-		}
+		
+		if (user.getId() != account.getUser().getId())
+			return new ResponseEntity<FolderDTO>(HttpStatus.UNAUTHORIZED);
 		
 		Folder folder = new Folder();
 		folder.setName(folderDTO.getName());
@@ -131,9 +193,19 @@ public class FolderController {
 	
 	@PutMapping(value = "/{id}", consumes = "application/json")
 	public ResponseEntity<FolderDTO> updateFolder(@RequestBody FolderDTO folderDTO, @PathVariable("id") Long id) {
+		User user = userService.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName());
+		
+		if (user == null)
+			return new ResponseEntity<FolderDTO>(HttpStatus.UNAUTHORIZED);
+		
 		Folder folder = folderService.findOne(id);
+		
 		if (folder == null)
 			return new ResponseEntity<FolderDTO>(HttpStatus.BAD_REQUEST);
+		
+		if (!userOwnsFolder(user, folder))
+			return new ResponseEntity<FolderDTO>(HttpStatus.UNAUTHORIZED);
+		
 		folder.setName(folderDTO.getName());
 		
 		folder = folderService.save(folder);
@@ -142,9 +214,18 @@ public class FolderController {
 	
 	@DeleteMapping(value = "/{id}")
 	public ResponseEntity<Void> deleteFolder(@PathVariable("id") Long id) {
+		User user = userService.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName());
+		
+		if (user == null)
+			return new ResponseEntity<Void>(HttpStatus.UNAUTHORIZED);
+		
 		Folder folder = folderService.findOne(id);
+		
 		if (folder == null)
 			return new ResponseEntity<Void>(HttpStatus.NOT_FOUND);
+		
+		if (!userOwnsFolder(user, folder))
+			return new ResponseEntity<Void>(HttpStatus.UNAUTHORIZED);
 		
 		folder.getParent().removeChildFolder(folder);
 		folder.getAccount().removeFolder(folder);
