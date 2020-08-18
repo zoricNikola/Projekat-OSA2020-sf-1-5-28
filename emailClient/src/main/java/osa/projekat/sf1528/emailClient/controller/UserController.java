@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -61,10 +62,10 @@ public class UserController {
 	
 	@GetMapping(value = "/{id}/accounts")
 	public ResponseEntity<List<AccountDTO>> getUserAccounts(@PathVariable("id") Long id){
-		User user = userService.findOne(id);
-		if(user == null) {
-			return new ResponseEntity<List<AccountDTO>>(HttpStatus.NOT_FOUND);
-		}
+		User user = userService.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName());
+		
+		if (user == null || user.getId() != id)
+			return new ResponseEntity<List<AccountDTO>>(HttpStatus.UNAUTHORIZED);
 		
 		List<Account> accounts = accountService.findByUser(user);
 		List<AccountDTO> userAccounts = new ArrayList<AccountDTO>();
@@ -77,10 +78,10 @@ public class UserController {
 	
 	@GetMapping(value = "/{id}/contacts")
 	public ResponseEntity<List<ContactDTO>> getUserContacts(@PathVariable("id") Long id){
-		User user = userService.findOne(id);
-		if(user == null) {
-			return new ResponseEntity<List<ContactDTO>>(HttpStatus.NOT_FOUND);
-		}
+		User user = userService.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName());
+		
+		if (user == null || user.getId() != id)
+			return new ResponseEntity<List<ContactDTO>>(HttpStatus.UNAUTHORIZED);
 		
 		List<Contact> contacts = contactService.findByUser(user);
 		List<ContactDTO> userContacts = new ArrayList<ContactDTO>();
@@ -93,10 +94,10 @@ public class UserController {
 	
 	@GetMapping(value = "/{id}/tags")
 	public ResponseEntity<List<TagDTO>> getUserTags(@PathVariable("id") Long id){
-		User user = userService.findOne(id);
-		if(user == null) {
-			return new ResponseEntity<List<TagDTO>>(HttpStatus.NOT_FOUND);
-		}
+		User user = userService.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName());
+		
+		if (user == null || user.getId() != id)
+			return new ResponseEntity<List<TagDTO>>(HttpStatus.UNAUTHORIZED);
 		
 		List<Tag> tags = tagService.findByUser(user);
 		List<TagDTO> userTags = new ArrayList<TagDTO>();
@@ -121,10 +122,10 @@ public class UserController {
 	
 	@PutMapping(value = "/{id}", consumes = "application/json")
 	public ResponseEntity<UserDTO> updateUser(@RequestBody UserDTO userDTO, @PathVariable("id") Long id){
-		User user = userService.findOne(id);
-		if(user == null) {
-			return new ResponseEntity<UserDTO>(HttpStatus.BAD_REQUEST);
-		}
+		User user = userService.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName());
+		
+		if (user == null || user.getId() != id)
+			return new ResponseEntity<UserDTO>(HttpStatus.UNAUTHORIZED);
 		
 		user.setUsername(userDTO.getUsername());
 		user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
@@ -138,10 +139,10 @@ public class UserController {
 	
 	@DeleteMapping(value = "/{id}")
 	public ResponseEntity<Void> deleteuser(@PathVariable("id") Long id){
-		User user = userService.findOne(id);
-		if(user == null) {
-			return new ResponseEntity<Void>(HttpStatus.NOT_FOUND);
-		}
+		User user = userService.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName());
+		
+		if (user == null || user.getId() != id)
+			return new ResponseEntity<Void>(HttpStatus.UNAUTHORIZED);
 		
 		userService.remove(id);
 		return new ResponseEntity<Void>(HttpStatus.OK);

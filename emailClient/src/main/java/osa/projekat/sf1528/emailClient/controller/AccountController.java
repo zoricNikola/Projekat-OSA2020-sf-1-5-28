@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -46,20 +47,43 @@ public class AccountController {
 	@Autowired
 	FolderService folderService;
 	
+	private boolean userOwnsAccount(User user, Account account) {
+		return user.getId() == account.getUser().getId();
+	}
+	
 	@GetMapping(value="/{id}")
 	public ResponseEntity<AccountDTO> getAccount(@PathVariable("id") Long id) {
+		User user = userService.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName());
+		
+		if (user == null)
+			return new ResponseEntity<AccountDTO>(HttpStatus.UNAUTHORIZED);
+		
 		Account account = accountService.findOne(id);
+		
 		if (account == null)
 			return new ResponseEntity<AccountDTO>(HttpStatus.NOT_FOUND);
+		
+		if (!userOwnsAccount(user, account))
+			return new ResponseEntity<AccountDTO>(HttpStatus.UNAUTHORIZED);
+		
 		
 		return new ResponseEntity<AccountDTO>(new AccountDTO(account), HttpStatus.OK);
 	}
 	
 	@GetMapping(value="/{id}/messages")
 	public ResponseEntity<List<MessageDTO>> getAccountMessages(@PathVariable("id") Long id) {
+		User user = userService.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName());
+		
+		if (user == null)
+			return new ResponseEntity<List<MessageDTO>>(HttpStatus.UNAUTHORIZED);
+		
 		Account account = accountService.findOne(id);
+		
 		if (account == null)
 			return new ResponseEntity<List<MessageDTO>>(HttpStatus.NOT_FOUND);
+
+		if (!userOwnsAccount(user, account))
+			return new ResponseEntity<List<MessageDTO>>(HttpStatus.UNAUTHORIZED);
 		
 		List<Message> messages = messageService.findByAccount(account);
 		List<MessageDTO> accountMessages = new ArrayList<MessageDTO>();
@@ -72,9 +96,18 @@ public class AccountController {
 	
 	@GetMapping(value="/{id}/folders")
 	public ResponseEntity<List<FolderDTO>> getAccountFolders(@PathVariable("id") Long id) {
+		User user = userService.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName());
+		
+		if (user == null)
+			return new ResponseEntity<List<FolderDTO>>(HttpStatus.UNAUTHORIZED);
+		
 		Account account = accountService.findOne(id);
+		
 		if (account == null)
 			return new ResponseEntity<List<FolderDTO>>(HttpStatus.NOT_FOUND);
+		
+		if (!userOwnsAccount(user, account))
+			return new ResponseEntity<List<FolderDTO>>(HttpStatus.UNAUTHORIZED);
 		
 		List<Folder> folders = folderService.findByAccount(account);
 		List<FolderDTO> accountFolders = new ArrayList<FolderDTO>();
@@ -87,10 +120,13 @@ public class AccountController {
 	
 	@PostMapping(value = "/{userId}", consumes = "application/json")
 	public ResponseEntity<AccountDTO> saveAccount(@RequestBody AccountDTO accountDTO, @PathVariable("userId") Long userId) {
-		User user = userService.findOne(userId);
-		if(user == null) {
-			return new ResponseEntity<AccountDTO>(HttpStatus.BAD_REQUEST);
-		}
+		User user = userService.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName());
+		
+		if (user == null)
+			return new ResponseEntity<AccountDTO>(HttpStatus.UNAUTHORIZED);
+		
+		if (user.getId() != userId)
+			return new ResponseEntity<AccountDTO>(HttpStatus.UNAUTHORIZED);
 		
 		Account account = new Account();
 		account.setSmtpAddress(accountDTO.getSmtpAddress());
@@ -119,8 +155,12 @@ public class AccountController {
 		r2.setOperation(Operation.MOVE);
 		f2.addRule(r2);
 		
+		Folder f3 = new Folder();
+		f3.setName("Drafts");
+		
 		account.addFolder(f1);
 		account.addFolder(f2);
+		account.addFolder(f3);
 		
 		account = accountService.save(account);
 		return new ResponseEntity<AccountDTO>(new AccountDTO(account), HttpStatus.CREATED);
@@ -128,9 +168,19 @@ public class AccountController {
 	
 	@PutMapping(value = "/{id}", consumes = "application/json")
 	public ResponseEntity<AccountDTO> updateAccount(@RequestBody AccountDTO accountDTO, @PathVariable("id") Long id) {
+		User user = userService.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName());
+		
+		if (user == null)
+			return new ResponseEntity<AccountDTO>(HttpStatus.UNAUTHORIZED);
+		
 		Account account = accountService.findOne(id);
+		
 		if (account == null)
 			return new ResponseEntity<AccountDTO>(HttpStatus.BAD_REQUEST);
+		
+		if (!userOwnsAccount(user, account))
+			return new ResponseEntity<AccountDTO>(HttpStatus.UNAUTHORIZED);
+		
 		account.setSmtpAddress(accountDTO.getSmtpAddress());
 		account.setSmtpPort(accountDTO.getSmtpPort());
 		account.setInServerType(accountDTO.getInServerType());
@@ -146,9 +196,18 @@ public class AccountController {
 	
 	@DeleteMapping(value = "/{id}")
 	public ResponseEntity<Void> deleteAccount(@PathVariable("id") Long id) {
+		User user = userService.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName());
+		
+		if (user == null)
+			return new ResponseEntity<Void>(HttpStatus.UNAUTHORIZED);
+		
 		Account account = accountService.findOne(id);
+		
 		if (account == null)
 			return new ResponseEntity<Void>(HttpStatus.NOT_FOUND);
+		
+		if (!userOwnsAccount(user, account))
+			return new ResponseEntity<Void>(HttpStatus.UNAUTHORIZED);
 		
 		account.getUser().removeAccount(account);
 		accountService.remove(id);
