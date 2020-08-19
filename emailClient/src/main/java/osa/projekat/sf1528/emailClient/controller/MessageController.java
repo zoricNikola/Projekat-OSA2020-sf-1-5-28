@@ -8,6 +8,7 @@ import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,18 +21,19 @@ import org.springframework.web.bind.annotation.RestController;
 import osa.projekat.sf1528.emailClient.dto.AttachmentDTO;
 import osa.projekat.sf1528.emailClient.dto.MessageDTO;
 import osa.projekat.sf1528.emailClient.dto.TagDTO;
-import osa.projekat.sf1528.emailClient.dto.UserDTO;
 import osa.projekat.sf1528.emailClient.model.Account;
 import osa.projekat.sf1528.emailClient.model.Attachment;
 import osa.projekat.sf1528.emailClient.model.Folder;
 import osa.projekat.sf1528.emailClient.model.Message;
 import osa.projekat.sf1528.emailClient.model.Rule;
 import osa.projekat.sf1528.emailClient.model.Tag;
+import osa.projekat.sf1528.emailClient.model.User;
 import osa.projekat.sf1528.emailClient.service.AccountService;
 import osa.projekat.sf1528.emailClient.service.AttachmentService;
 import osa.projekat.sf1528.emailClient.service.FolderService;
 import osa.projekat.sf1528.emailClient.service.MessageService;
 import osa.projekat.sf1528.emailClient.service.TagService;
+import osa.projekat.sf1528.emailClient.service.UserService;
 
 @RestController
 @RequestMapping(value = "api/messages")
@@ -51,21 +53,50 @@ public class MessageController {
 	
 	@Autowired
 	AttachmentService attachmentService;
+	
+	@Autowired
+	UserService userService;
+	
+	private boolean userOwnsMessage(User user, Message message) {
+		return user.getId() == message.getAccount().getUser().getId();
+	}
 
 	@GetMapping(value="/{id}")
 	public ResponseEntity<MessageDTO> getMessage(@PathVariable("id") Long id) {
+		User user = userService.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName());
+		
+		if(user == null) {
+			return new ResponseEntity<MessageDTO>(HttpStatus.UNAUTHORIZED);
+		}
+		
 		Message message = messageService.findOne(id);
-		if (message == null)
+		
+		if (message == null) {
 			return new ResponseEntity<MessageDTO>(HttpStatus.NOT_FOUND);
+		}
+		if(!userOwnsMessage(user, message)) {
+			return new ResponseEntity<MessageDTO>(HttpStatus.UNAUTHORIZED);
+		}
 		
 		return new ResponseEntity<MessageDTO>(new MessageDTO(message), HttpStatus.OK);
 	}
 	
 	@GetMapping(value="/{id}/tags")
 	public ResponseEntity<List<TagDTO>> getMessageTags(@PathVariable("id") Long id) {
+		User user = userService.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName());
+		
+		if(user == null) {
+			return new ResponseEntity<List<TagDTO>>(HttpStatus.UNAUTHORIZED);
+		}
+		
 		Message message = messageService.findOne(id);
-		if (message == null)
+		
+		if (message == null) {
 			return new ResponseEntity<List<TagDTO>>(HttpStatus.NOT_FOUND);
+		}
+		if(!userOwnsMessage(user, message)) {
+			return new ResponseEntity<List<TagDTO>>(HttpStatus.UNAUTHORIZED);
+		}
 		
 		List<Tag> tags = tagService.findByMessage(message);
 		List<TagDTO> messageTags = new ArrayList<TagDTO>();
@@ -78,10 +109,20 @@ public class MessageController {
 	
 	@GetMapping(value="/{id}/attachments")
 	public ResponseEntity<List<AttachmentDTO>> getMessageAttachments(@PathVariable("id") Long id) {
-		Message message = messageService.findOne(id);
-		if (message == null)
-			return new ResponseEntity<List<AttachmentDTO>>(HttpStatus.NOT_FOUND);
+		User user = userService.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName());
 		
+		if(user == null) {
+			return new ResponseEntity<List<AttachmentDTO>>(HttpStatus.UNAUTHORIZED);
+		}
+		
+		Message message = messageService.findOne(id);
+		
+		if (message == null) {
+			return new ResponseEntity<List<AttachmentDTO>>(HttpStatus.NOT_FOUND);
+		}
+		if(!userOwnsMessage(user, message)) {
+			return new ResponseEntity<List<AttachmentDTO>>(HttpStatus.UNAUTHORIZED);
+		}
 		List<Attachment> attachments = attachmentService.findByMessage(message);
 		List<AttachmentDTO> messageAttachments = new ArrayList<AttachmentDTO>();
 		for (Attachment attachment : attachments) {
@@ -93,10 +134,20 @@ public class MessageController {
 	
 	@PostMapping(value = "/{accountId}", consumes = "application/json")
 	public ResponseEntity<MessageDTO> saveMessage(@RequestBody MessageDTO messageDTO, @PathVariable("accountId") Long accountId) {
+		User user = userService.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName());
+		
+		if(user == null) {
+			return new ResponseEntity<MessageDTO>(HttpStatus.UNAUTHORIZED);
+		}
+		
 		Account account = accountService.findOne(accountId);
+		
 		if (account == null) {
 			return new ResponseEntity<MessageDTO>(HttpStatus.BAD_REQUEST);
 		}
+		if(user.getId() != account.getUser().getId()) {
+			return new ResponseEntity<MessageDTO>(HttpStatus.UNAUTHORIZED);
+		}		
 		
 		Message message = new Message();
 		message.setFrom(messageDTO.getFrom());
@@ -127,9 +178,20 @@ public class MessageController {
 	
 	@PutMapping(value = "/{id}", consumes = "application/json")
 	public ResponseEntity<MessageDTO> updateMessageTags(@RequestBody MessageDTO messageDTO, @PathVariable("id") Long id) {
+		User user = userService.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName());
+		
+		if(user == null) {
+			return new ResponseEntity<MessageDTO>(HttpStatus.UNAUTHORIZED);
+		}
+		
 		Message message = messageService.findOne(id);
-		if (message == null)
-			return new ResponseEntity<MessageDTO>(HttpStatus.NOT_FOUND);
+		
+		if (message == null) {
+			return new ResponseEntity<MessageDTO>(HttpStatus.BAD_REQUEST);
+		}
+		if(!userOwnsMessage(user, message)) {
+			return new ResponseEntity<MessageDTO>(HttpStatus.UNAUTHORIZED);
+		}
 		
 		Set<Tag> currentTags = message.getTags();
 		Set<Tag> updatedTags = new HashSet<Tag>();
@@ -175,13 +237,29 @@ public class MessageController {
 	
 	@PutMapping(value = "/{id}/moveTo/{folderId}")
 	public ResponseEntity<MessageDTO> moveMessage(@PathVariable("id") Long id, @PathVariable("folderId") Long folderId) {
+		User user = userService.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName());
+		
+		if(user == null) {
+			return new ResponseEntity<MessageDTO>(HttpStatus.UNAUTHORIZED);
+		}
+		
 		Message message = messageService.findOne(id);
-		if (message == null)
-			return new ResponseEntity<MessageDTO>(HttpStatus.NOT_FOUND);
+		
+		if (message == null) {
+			return new ResponseEntity<MessageDTO>(HttpStatus.BAD_REQUEST);
+		}
+		if(!userOwnsMessage(user, message)) {
+			return new ResponseEntity<MessageDTO>(HttpStatus.UNAUTHORIZED);
+		}
 		
 		Folder folder = folderService.findOne(folderId);
-		if (folder == null)
+		
+		if (folder == null) {
 			return new ResponseEntity<MessageDTO>(HttpStatus.BAD_REQUEST);
+		}
+		if(user.getId() != folder.getAccount().getUser().getId()) {
+			return new ResponseEntity<MessageDTO>(HttpStatus.UNAUTHORIZED);
+		}
 		
 		folder.addMessage(message);
 		
@@ -191,9 +269,20 @@ public class MessageController {
 	
 	@DeleteMapping(value = "/{id}")
 	public ResponseEntity<Void> deleteMessage(@PathVariable("id") Long id) {
+		User user = userService.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName());
+		
+		if(user == null) {
+			return new ResponseEntity<Void>(HttpStatus.UNAUTHORIZED);
+		}
+		
 		Message message = messageService.findOne(id);
-		if (message == null)
+		
+		if (message == null) {
 			return new ResponseEntity<Void>(HttpStatus.NOT_FOUND);
+		}
+		if(!userOwnsMessage(user, message)) {
+			return new ResponseEntity<Void>(HttpStatus.UNAUTHORIZED);
+		}
 		
 		message.getAccount().removeMessage(message);
 		message.getFolder().removeMessage(message);
