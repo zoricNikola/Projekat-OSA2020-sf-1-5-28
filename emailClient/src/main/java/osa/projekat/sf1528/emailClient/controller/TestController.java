@@ -1,15 +1,21 @@
 package osa.projekat.sf1528.emailClient.controller;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import osa.projekat.sf1528.emailClient.mail.MailUtil;
 import osa.projekat.sf1528.emailClient.model.Account;
+import osa.projekat.sf1528.emailClient.model.Attachment;
 import osa.projekat.sf1528.emailClient.model.Contact;
 import osa.projekat.sf1528.emailClient.model.Folder;
 import osa.projekat.sf1528.emailClient.model.Message;
@@ -25,10 +31,11 @@ import osa.projekat.sf1528.emailClient.service.MessageService;
 import osa.projekat.sf1528.emailClient.service.RuleService;
 import osa.projekat.sf1528.emailClient.service.TagService;
 import osa.projekat.sf1528.emailClient.service.UserService;
+import osa.projekat.sf1528.emailClient.util.Base64;
 
 
 @RestController
-@RequestMapping(value = "api")
+@RequestMapping(value = "api/test")
 public class TestController {
 	
 	@Autowired
@@ -52,11 +59,14 @@ public class TestController {
 	@Autowired
 	MessageService messageService;
 	
+	@Autowired
+	private PasswordEncoder passwordEncoder;
+	
 	@GetMapping(value = "/startData")
 	public ResponseEntity<Void> createStartData(){
 		User u1 = new User();
 		u1.setUsername("admin");
-		u1.setPassword("admin");
+		u1.setPassword(passwordEncoder.encode("admin"));
 		u1.setFirstName("Nikola");
 		u1.setLastName("Zoric");
 		
@@ -116,6 +126,9 @@ public class TestController {
 		f2.addRule(r2);
 //		r2.setDestination(f2);
 		
+		Folder f5 = new Folder();
+		f5.setName("Drafts");
+		
 		Folder f3 = new Folder();
 		f3.setName("Spam");
 		Folder f4 = new Folder();
@@ -137,6 +150,7 @@ public class TestController {
 //		f4.setParent(f1);
 		a1.addFolder(f1);
 		a1.addFolder(f2);
+		a1.addFolder(f5);
 		a1.addFolder(f3);
 		a1.addFolder(f4);
 //		f1.setAccount(a1);
@@ -154,20 +168,47 @@ public class TestController {
 	@GetMapping(value = "/test")
 	public ResponseEntity<Void> test(){
 		
+		Account a1 = new Account();
+		a1.setSmtpAddress("smtp.gmail.com");
+		a1.setSmtpPort(587);
+		a1.setInServerType((short) 1);
+		a1.setInServerAddress("imap.gmail.com");
+		a1.setInServerPort(993);
+		a1.setUsername("znikoolaa@gmail.com");
+//		IF YOU COMMIT THIS FILE WITH YOUR REAL PASSWORD, IT IS ON YOUR OWN RISK
+		a1.setPassword("*********"); 
+//		IF YOU COMMIT THIS FILE WITH YOUR REAL PASSWORD, IT IS ON YOUR OWN RISK
+		a1.setDisplayName("Nikola Zoric");
+		
 		Message m = new Message();
-		m.setFrom("admin.admin@gmail.com");
-		m.setTo("znikoolaa@gmail.com");
+		m.setFrom("znikoolaa@gmail.com");
+		m.setTo("nikola.se.zoric@gmail.com");
 		m.setCc("");
 		m.setBcc("");
 		m.setDateTime(LocalDateTime.now());
-		m.setSubject("subject");
-		m.setContent("content");
+		m.setSubject("Subject");
+		m.setContent("This is content of the message");
 		m.setUnread(true);
-		accountService.findOne((long) 1).addMessage(m);
-		folderService.findOne((long) 4).addMessage(m);
-		m.addTag(tagService.findOne((long) 2));
 		
-		messageService.save(m);
+//		try {
+//			byte[] att = Files.readAllBytes(Paths.get("PATH_TO_FILE"));
+//			Attachment at1 = new Attachment();
+//			at1.setName("My attachment");
+//			at1.setData(Base64.encodeToString(att));
+//			at1.setMimeType("image/jpeg");
+//			m.addAttachment(at1);
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+		
+		
+		a1.addMessage(m);
+		
+		boolean successful = MailUtil.sendMessage(m);
+		
+		if (!successful)
+			return new ResponseEntity<Void>(HttpStatus.INTERNAL_SERVER_ERROR);
 		
 		return new ResponseEntity<Void>(HttpStatus.OK);
 	}

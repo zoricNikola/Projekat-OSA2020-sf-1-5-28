@@ -8,6 +8,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
@@ -22,8 +23,9 @@ public class Attachment implements Serializable {
 	@Column(name = "attachment_id", unique = true, nullable = false)
 	private Long id;
 	
+	@Lob
 	@Column(name = "data", unique = false, nullable = false)
-	private byte[] data;
+	private String data;
 	
 	@Column(name = "mime_type", unique = false, nullable = false)
 	private String mimeType;
@@ -45,11 +47,11 @@ public class Attachment implements Serializable {
 		this.id = id;
 	}
 
-	public byte[] getData() {
+	public String getData() {
 		return data;
 	}
 
-	public void setData(byte[] data) {
+	public void setData(String data) {
 		this.data = data;
 	}
 

@@ -10,7 +10,7 @@ public class AttachmentDTO implements Serializable {
 	
 	private Long id;
 	
-	private byte[] data;
+	private String data;
 	
 	private String mimeType;
 	
@@ -18,7 +18,7 @@ public class AttachmentDTO implements Serializable {
 	
 	public AttachmentDTO() {}
 
-	public AttachmentDTO(Long id, byte[] data, String mimeType, String name) {
+	public AttachmentDTO(Long id, String data, String mimeType, String name) {
 		super();
 		this.id = id;
 		this.data = data;
@@ -38,11 +38,11 @@ public class AttachmentDTO implements Serializable {
 		this.id = id;
 	}
 
-	public byte[] getData() {
+	public String getData() {
 		return data;
 	}
 
-	public void setData(byte[] data) {
+	public void setData(String data) {
 		this.data = data;
 	}
 
