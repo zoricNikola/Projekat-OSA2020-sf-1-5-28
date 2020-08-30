@@ -3,6 +3,7 @@ package osa.projekat.sf1528.emailClient.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,21 +29,37 @@ public class ContactController {
 	@Autowired
 	UserService userService;
 	
+	private boolean userOwnsContact(User user, Contact contact) {
+		return user.getId() == contact.getUser().getId();
+	}
+	
 	@GetMapping(value="/{id}")
 	public ResponseEntity<ContactDTO> getContact(@PathVariable("id") Long id) {
+		User user = userService.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName());
+		
+		if (user == null)
+			return new ResponseEntity<ContactDTO>(HttpStatus.UNAUTHORIZED);
+		
 		Contact contact = contactService.findOne(id);
+		
 		if (contact == null)
 			return new ResponseEntity<ContactDTO>(HttpStatus.NOT_FOUND);
+		
+		if (!userOwnsContact(user, contact))
+			return new ResponseEntity<ContactDTO>(HttpStatus.UNAUTHORIZED);
 		
 		return new ResponseEntity<ContactDTO>(new ContactDTO(contact), HttpStatus.OK);
 	}
 	
 	@PostMapping(value = "/{userId}", consumes = "application/json")
 	public ResponseEntity<ContactDTO> saveContact(@RequestBody ContactDTO contactDTO, @PathVariable("userId") Long userId) {
-		User user = userService.findOne(userId);
-		if(user == null) {
-			return new ResponseEntity<ContactDTO>(HttpStatus.BAD_REQUEST);
-		}
+		User user = userService.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName());
+		
+		if (user == null)
+			return new ResponseEntity<ContactDTO>(HttpStatus.UNAUTHORIZED);
+		
+		if (user.getId() != userId)
+			return new ResponseEntity<ContactDTO>(HttpStatus.UNAUTHORIZED);
 		
 		Contact contact = new Contact();
 		contact.setFirstName(contactDTO.getFirstName());
@@ -59,9 +76,18 @@ public class ContactController {
 	
 	@PutMapping(value = "/{id}", consumes = "application/json")
 	public ResponseEntity<ContactDTO> updateContact(@RequestBody ContactDTO contactDTO, @PathVariable("id") Long id) {
+		User user = userService.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName());
+		
+		if (user == null)
+			return new ResponseEntity<ContactDTO>(HttpStatus.UNAUTHORIZED);
+		
 		Contact contact = contactService.findOne(id);
+		
 		if (contact == null)
 			return new ResponseEntity<ContactDTO>(HttpStatus.BAD_REQUEST);
+		
+		if (!userOwnsContact(user, contact))
+			return new ResponseEntity<ContactDTO>(HttpStatus.UNAUTHORIZED);
 		
 		contact.setFirstName(contactDTO.getFirstName());
 		contact.setLastName(contactDTO.getLastName());
@@ -76,9 +102,18 @@ public class ContactController {
 	
 	@DeleteMapping(value = "/{id}")
 	public ResponseEntity<Void> deleteContact(@PathVariable("id") Long id) {
+		User user = userService.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName());
+		
+		if (user == null)
+			return new ResponseEntity<Void>(HttpStatus.UNAUTHORIZED);
+		
 		Contact contact = contactService.findOne(id);
+		
 		if (contact == null)
 			return new ResponseEntity<Void>(HttpStatus.NOT_FOUND);
+		
+		if (!userOwnsContact(user, contact))
+			return new ResponseEntity<Void>(HttpStatus.UNAUTHORIZED);
 		
 		contact.getUser().removeContact(contact);
 		contactService.remove(id);
