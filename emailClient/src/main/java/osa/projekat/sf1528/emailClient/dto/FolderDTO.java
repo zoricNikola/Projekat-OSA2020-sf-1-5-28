@@ -12,16 +12,20 @@ public class FolderDTO implements Serializable {
 	
 	private String name;
 	
+	private int numberOfMessages;
+	
 	public FolderDTO() {}
 	
-	public FolderDTO(Long id, String name) {
+	public FolderDTO(Long id, String name, int numberOfMessages) {
 		super();
 		this.id = id;
 		this.name = name;
+		this.numberOfMessages = numberOfMessages;
 	}
 	
 	public FolderDTO(Folder folder) {
-		this(folder.getId(), folder.getName());
+		this(folder.getId(), folder.getName(), folder.getMessages().size());
+		
 	}
 
 	public Long getId() {
@@ -38,6 +42,14 @@ public class FolderDTO implements Serializable {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public int getNumberOfMessages() {
+		return numberOfMessages;
+	}
+
+	public void setNumberOfMessages(int numberOfMessages) {
+		this.numberOfMessages = numberOfMessages;
 	}
 
 	public static long getSerialversionuid() {

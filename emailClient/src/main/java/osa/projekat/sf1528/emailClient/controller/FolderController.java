@@ -1,7 +1,9 @@
 package osa.projekat.sf1528.emailClient.controller;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -167,6 +169,66 @@ public class FolderController {
 		return new ResponseEntity<List<RuleDTO>>(folderRules, HttpStatus.OK);
 	}
 	
+	@PutMapping(value="/{id}/rules")
+	public ResponseEntity<List<RuleDTO>> updateFolderRules(@PathVariable("id") Long id, @RequestBody List<RuleDTO> updatedRules) {
+		User user = userService.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName());
+		
+		if (user == null)
+			return new ResponseEntity<List<RuleDTO>>(HttpStatus.UNAUTHORIZED);
+		
+		Folder folder = folderService.findOne(id);
+		
+		if (folder == null)
+			return new ResponseEntity<List<RuleDTO>>(HttpStatus.NOT_FOUND);
+		
+		if (!userOwnsFolder(user, folder))
+			return new ResponseEntity<List<RuleDTO>>(HttpStatus.UNAUTHORIZED);
+		
+		List<Rule> currentRules = ruleService.findByDestination(folder);
+		
+		Set<Rule> toDeleteRules = new HashSet<Rule>();
+		Set<RuleDTO> toAddRules = new HashSet<RuleDTO>();
+		
+		for (Rule cR : currentRules) {
+			boolean shouldDelete = true;
+			for (RuleDTO uR : updatedRules) {
+				if (uR.getId() != null && uR.getId() > 0) {
+					if (cR.getId() == uR.getId()) {
+						shouldDelete = false;
+						break;
+					}
+				}
+			}
+			
+			if (shouldDelete)
+				toDeleteRules.add(cR);
+		}
+		
+		for (RuleDTO uR : updatedRules) {
+			if (uR.getId() == null || uR.getId() == 0)
+				toAddRules.add(uR);
+		}
+		
+		for (Rule r : toDeleteRules)
+			folder.removeRule(r);
+		
+		for (RuleDTO ruleDTO : toAddRules) {
+			Rule rule = new Rule();
+			rule.setValue(ruleDTO.getValue());
+			rule.setCondition(ruleDTO.getCondition());
+			rule.setOperation(ruleDTO.getOperation());
+			folder.addRule(rule);
+		}
+		
+		folder = folderService.save(folder);
+		
+		List<RuleDTO> rules = new ArrayList<RuleDTO>();
+		for (Rule r : folder.getRules())
+			rules.add(new RuleDTO(r));
+		
+		return new ResponseEntity<List<RuleDTO>>(rules, HttpStatus.CREATED);
+	}
+	
 	@PostMapping(value = "/{accountId}", consumes = "application/json")
 	public ResponseEntity<FolderDTO> saveFolder(@RequestBody FolderDTO folderDTO, @PathVariable("accountId") Long accountId) {
 		User user = userService.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName());
@@ -227,7 +289,8 @@ public class FolderController {
 		if (!userOwnsFolder(user, folder))
 			return new ResponseEntity<Void>(HttpStatus.UNAUTHORIZED);
 		
-		folder.getParent().removeChildFolder(folder);
+		if (folder.getParent() != null)
+			folder.getParent().removeChildFolder(folder);
 		folder.getAccount().removeFolder(folder);
 		folderService.remove(id);
 		return new ResponseEntity<Void>(HttpStatus.OK);

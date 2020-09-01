@@ -206,8 +206,10 @@ public class MessageController {
 		for (Tag cTag : currentTags) {
 			boolean shouldDelete = true;
 			for (Tag uTag : updatedTags) {
-				if (cTag.getId() == uTag.getId())
-					shouldDelete = false;;
+				if (cTag.getId() == uTag.getId()) {
+					shouldDelete = false;
+					break;
+				}
 			}
 			
 			if (shouldDelete)
@@ -217,8 +219,10 @@ public class MessageController {
 		for (Tag uTag : updatedTags) {
 			boolean shouldAdd = true;
 			for (Tag cTag : currentTags) {
-				if (uTag.getId() == cTag.getId())
+				if (uTag.getId() == cTag.getId()) {
 					shouldAdd = false;
+					break;
+				}
 			}
 			
 			if (shouldAdd)
