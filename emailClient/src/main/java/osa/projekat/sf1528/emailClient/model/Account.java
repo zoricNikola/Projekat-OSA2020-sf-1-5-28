@@ -4,6 +4,7 @@ import static javax.persistence.CascadeType.ALL;
 import static javax.persistence.FetchType.LAZY;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -20,6 +21,8 @@ import javax.persistence.Table;
 @Entity
 @Table(name = "accounts")
 public class Account implements Serializable {
+	
+	public enum InServerType { POP3, IMAP }
 
 	private static final long serialVersionUID = -5390265725037712857L;
 
@@ -35,7 +38,7 @@ public class Account implements Serializable {
 	private Integer smtpPort;
 	
 	@Column(name = "in_server_type", unique = false, nullable = false)
-	private Short inServerType;
+	private InServerType inServerType;
 	
 	@Column(name = "in_server_address", unique = false, nullable = false)
 	private String inServerAddress;
@@ -63,6 +66,9 @@ public class Account implements Serializable {
 
 	@OneToMany(cascade = {ALL}, fetch = LAZY, mappedBy = "account")
 	private Set<Message> messages = new HashSet<Message>();
+	
+	@Column(name = "account_lastMailSync", nullable = true)
+	private LocalDateTime lastMailSync;
 	
 	public Account() {}
 	
@@ -114,11 +120,11 @@ public class Account implements Serializable {
 		this.smtpPort = smtpPort;
 	}
 
-	public Short getInServerType() {
+	public InServerType getInServerType() {
 		return inServerType;
 	}
 
-	public void setInServerType(Short inServerType) {
+	public void setInServerType(InServerType inServerType) {
 		this.inServerType = inServerType;
 	}
 
@@ -184,6 +190,14 @@ public class Account implements Serializable {
 
 	public void setMessages(Set<Message> messages) {
 		this.messages = messages;
+	}
+
+	public LocalDateTime getLastMailSync() {
+		return lastMailSync;
+	}
+
+	public void setLastMailSync(LocalDateTime lastMailSync) {
+		this.lastMailSync = lastMailSync;
 	}
 
 	public static long getSerialversionuid() {

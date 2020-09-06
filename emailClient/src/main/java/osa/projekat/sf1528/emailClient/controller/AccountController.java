@@ -1,7 +1,9 @@
 package osa.projekat.sf1528.emailClient.controller;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 import osa.projekat.sf1528.emailClient.dto.AccountDTO;
 import osa.projekat.sf1528.emailClient.dto.FolderDTO;
 import osa.projekat.sf1528.emailClient.dto.MessageDTO;
+import osa.projekat.sf1528.emailClient.mail.MailUtil;
 import osa.projekat.sf1528.emailClient.model.Account;
 import osa.projekat.sf1528.emailClient.model.Folder;
 import osa.projekat.sf1528.emailClient.model.Message;
@@ -92,6 +95,47 @@ public class AccountController {
 		}
 		
 		return new ResponseEntity<List<MessageDTO>>(accountMessages, HttpStatus.OK);
+	}
+	
+	@SuppressWarnings("unchecked")
+	@GetMapping(value="/{id}/sync")
+	public ResponseEntity<Map<String, Object>> syncAccountMessages(@PathVariable("id") Long id) {
+		User user = userService.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName());
+		
+		if (user == null)
+			return new ResponseEntity<Map<String, Object>>(HttpStatus.UNAUTHORIZED);
+		
+		Account account = accountService.findOne(id);
+		
+		if (account == null)
+			return new ResponseEntity<Map<String, Object>>(HttpStatus.NOT_FOUND);
+
+		if (!userOwnsAccount(user, account))
+			return new ResponseEntity<Map<String, Object>>(HttpStatus.UNAUTHORIZED);
+		
+		Map<String, Object> result = MailUtil.syncMessages(account);
+		
+		if (result == null)
+			return new ResponseEntity<Map<String, Object>>(HttpStatus.INTERNAL_SERVER_ERROR);
+		
+		List<Message> newMessages = (List<Message>) result.get("messages");
+		if (newMessages != null && newMessages.size() > 0) {
+			account.getMessages().addAll(newMessages);
+			MailUtil.storeMessagesInAccountsInboxFolder(newMessages, account);
+		}
+		account = accountService.save(account);
+		
+		Map<String, Object> resultDTO = new HashMap<String, Object>();
+		resultDTO.put("mode", result.get("mode"));
+		
+		List<MessageDTO> newMessagesDTO = new ArrayList<MessageDTO>();
+		for (Message message : newMessages) {
+			newMessagesDTO.add(new MessageDTO(message));
+		}
+		
+		resultDTO.put("messages", newMessagesDTO);
+		
+		return new ResponseEntity<Map<String, Object>>(resultDTO, HttpStatus.OK);
 	}
 	
 	@GetMapping(value="/{id}/folders")

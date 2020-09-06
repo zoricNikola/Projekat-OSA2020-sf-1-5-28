@@ -14,7 +14,7 @@ public class AccountDTO implements Serializable {
 	
 	private Integer smtpPort;
 	
-	private Short inServerType;
+	private Account.InServerType inServerType;
 	
 	private String inServerAddress;
 	
@@ -28,7 +28,7 @@ public class AccountDTO implements Serializable {
 	
 	public AccountDTO() {}
 	
-	public AccountDTO(Long id, String smtpAddress, Integer smtpPort, Short inServerType, String inServerAddress,
+	public AccountDTO(Long id, String smtpAddress, Integer smtpPort, Account.InServerType inServerType, String inServerAddress,
 			Integer inServerPort, String username, String password, String displayName) {
 		super();
 		this.id = id;
@@ -73,11 +73,11 @@ public class AccountDTO implements Serializable {
 		this.smtpPort = smtpPort;
 	}
 
-	public Short getInServerType() {
+	public Account.InServerType getInServerType() {
 		return inServerType;
 	}
 
-	public void setInServerType(Short inServerType) {
+	public void setInServerType(Account.InServerType inServerType) {
 		this.inServerType = inServerType;
 	}
 

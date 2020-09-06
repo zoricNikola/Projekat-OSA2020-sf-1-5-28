@@ -1,10 +1,28 @@
 package osa.projekat.sf1528.emailClient.mail;
 
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
+import javax.mail.Address;
+import javax.mail.Flags;
+import javax.mail.Folder;
+import javax.mail.MessagingException;
+import javax.mail.Multipart;
+import javax.mail.NoSuchProviderException;
+import javax.mail.Part;
+import javax.mail.Session;
+import javax.mail.Store;
 import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
 import javax.mail.util.ByteArrayDataSource;
 
+import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
 
@@ -15,7 +33,7 @@ import osa.projekat.sf1528.emailClient.util.Base64;
 
 public class MailUtil {
 	
-	public static JavaMailSenderImpl getJavaMailSender(Account account) {
+	private static JavaMailSenderImpl getJavaMailSender(Account account) {
 		JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
 		mailSender.setHost(account.getSmtpAddress());
 		mailSender.setPort(account.getSmtpPort());
@@ -61,6 +79,186 @@ public class MailUtil {
 		} catch (Exception e) {
 			e.printStackTrace();
 			return false;
+		}
+	}
+	
+	public static Map<String, Object> syncMessages(Account account) {
+		LocalDateTime lastSync = account.getLastMailSync();
+		try {
+			Session session = null;
+			Store store = null;
+			if (account.getInServerType() == Account.InServerType.POP3) {
+				Properties props = new Properties();
+				props.put("mail.store.protocol", "pop3");
+				props.put("mail.pop3.host", account.getInServerAddress());
+				props.put("mail.pop3.port", account.getInServerPort());
+				props.put("mail.pop3.starttls.enable", "true");
+				session = Session.getDefaultInstance(props);
+				store = session.getStore("pop3s");
+			}
+			else if (account.getInServerType() == Account.InServerType.IMAP) {
+				Properties props = new Properties();
+				props.put("mail.store.protocol", "imap");
+				props.put("mail.imap.host", account.getInServerAddress());
+				props.put("mail.imap.port", account.getInServerPort());
+				props.put("mail.imap.starttls.enable", "true");
+				session = Session.getDefaultInstance(props);
+				store = session.getStore("imap");
+			}
+			
+			store.connect(account.getInServerAddress(), account.getUsername(), account.getPassword());
+			
+			Folder inboxFolder = store.getFolder("INBOX");
+			inboxFolder.open(Folder.READ_ONLY);
+			
+			account.setLastMailSync(LocalDateTime.now());
+			javax.mail.Message[] messages = inboxFolder.getMessages();
+			Map<String, Object> result = new HashMap<String, Object>();
+			List<Message> myMessages = new ArrayList<Message>();
+			
+			if (lastSync != null) {
+				result.put("mode", "sync");
+				for (int i = (messages.length - 1); i > -1; i--) {
+					javax.mail.Message message = messages[i];
+					if ( LocalDateTime.ofInstant(message.getSentDate().toInstant(), 
+								ZoneId.systemDefault()).isAfter(lastSync)) {
+					
+						Message myMessage = javaxMessageToMyMessage(message);
+						myMessage.setAccount(account);
+	//					account.addMessage(myMessage);
+	//					storeInAccountsInboxFolder(myMessage, account);
+						myMessages.add(myMessage);
+					}
+					else {
+						break;
+					}
+				}
+			}
+			else {
+				result.put("mode", "startData");
+				for (int i = (messages.length - 1); i > -1; i--) {
+					javax.mail.Message message = messages[i];
+					Message myMessage = javaxMessageToMyMessage(message);
+					myMessage.setAccount(account);
+	//				account.addMessage(myMessage);
+	//				storeInAccountsInboxFolder(myMessage, account);
+					myMessages.add(myMessage);
+				}
+			}
+			
+			inboxFolder.close(false);
+			store.close();
+			
+			result.put("messages", myMessages);
+			return result;
+			
+		} catch (NoSuchProviderException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (MessagingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		account.setLastMailSync(lastSync);
+		return null;
+	}
+	
+	public static Message javaxMessageToMyMessage(javax.mail.Message javaxMessage) throws MessagingException, IOException {
+		Message message = new Message();
+		Address[] addresses;
+		StringBuilder sb;
+		
+		message.setFrom(javaxMessage.getFrom()[0].toString());
+		
+		if ((addresses = javaxMessage.getRecipients(javax.mail.Message.RecipientType.TO)) != null) {
+			sb = new StringBuilder("");
+			for (int i = 0; i < addresses.length; i++) {
+				if (i > 0) {
+					sb.append(", ");
+				}
+				sb.append(addresses[i].toString());
+			}
+			message.setTo(sb.toString());
+		}
+		
+		if ((addresses = javaxMessage.getRecipients(javax.mail.Message.RecipientType.CC)) != null) {
+			sb = new StringBuilder("");
+			for (int i = 0; i < addresses.length; i++) {
+				if (i > 0) {
+					sb.append(", ");
+				}
+				sb.append(addresses[i].toString());
+			}
+			message.setCc(sb.toString());
+		}
+		
+		if ((addresses = javaxMessage.getRecipients(javax.mail.Message.RecipientType.BCC)) != null) {
+			sb = new StringBuilder("");
+			for (int i = 0; i < addresses.length; i++) {
+				if (i > 0) {
+					sb.append(", ");
+				}
+				sb.append(addresses[i].toString());
+			}
+			message.setBcc(sb.toString());
+		}
+		
+		message.setDateTime(LocalDateTime.ofInstant(javaxMessage.getSentDate().toInstant(), ZoneId.systemDefault()));
+		
+		message.setSubject(javaxMessage.getSubject());
+		
+		message.setUnread(!javaxMessage.isSet(Flags.Flag.SEEN));
+		
+		if (javaxMessage.getContentType().contains("text/plain") || javaxMessage.getContentType().contains("text/html")) {
+			message.setContent(javaxMessage.getContent().toString());
+		}
+		else if (javaxMessage.getContentType().contains("multipart")) {
+			Multipart mp = (Multipart) javaxMessage.getContent();
+			for (int i = 0; i < mp.getCount(); i++) {
+				proccessPart(mp.getBodyPart(i), message);
+			}
+		}
+		
+		return message;
+	}
+	
+	private static void proccessPart(Part part, Message message) throws MessagingException, IOException {
+		if (part.getContentType().contains("text/plain") || part.getContentType().contains("text/html")) {
+			message.setContent(part.getContent().toString());
+		}
+		else if (part.getContentType().contains("multipart")) {
+			if (part.getContent() instanceof MimeMultipart) {
+				MimeMultipart mp = (MimeMultipart) part.getContent();
+				message.setContent(mp.getBodyPart(0).getContent().toString());
+			}
+		}
+		else {
+			if (part.getDisposition() != null && part.getDisposition().equalsIgnoreCase(Part.ATTACHMENT) 
+					&& part.getFileName() != null && !part.getFileName().isEmpty()) {
+				byte[] attachmentBytes = new byte[8192];
+				IOUtils.readFully(part.getInputStream(), attachmentBytes);
+				String encodedAttachment = Base64.encodeToString(attachmentBytes);
+				
+				Attachment attachment = new Attachment();
+				attachment.setName(part.getFileName());
+				attachment.setMimeType(part.getContentType().split(";")[0]);
+				attachment.setData(encodedAttachment);
+				message.addAttachment(attachment);
+			}
+		}
+	}
+	
+	public static void storeMessagesInAccountsInboxFolder(List<Message> messages, Account account) {
+		for (osa.projekat.sf1528.emailClient.model.Folder folder : account.getFolders()) {
+			if (folder.getName().equalsIgnoreCase("inbox")) {
+				for (Message message : messages)
+					folder.addMessage(message);
+				break;
+			}
 		}
 	}
 
