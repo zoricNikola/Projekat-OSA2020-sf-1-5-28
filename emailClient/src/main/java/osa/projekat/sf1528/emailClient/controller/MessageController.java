@@ -1,5 +1,6 @@
 package osa.projekat.sf1528.emailClient.controller;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import osa.projekat.sf1528.emailClient.dto.AttachmentDTO;
 import osa.projekat.sf1528.emailClient.dto.MessageDTO;
 import osa.projekat.sf1528.emailClient.dto.TagDTO;
+import osa.projekat.sf1528.emailClient.mail.MailUtil;
 import osa.projekat.sf1528.emailClient.model.Account;
 import osa.projekat.sf1528.emailClient.model.Attachment;
 import osa.projekat.sf1528.emailClient.model.Folder;
@@ -154,26 +156,90 @@ public class MessageController {
 		message.setTo(messageDTO.getTo());
 		message.setCc(messageDTO.getCc());
 		message.setBcc(messageDTO.getBcc());
-		message.setDateTime(messageDTO.getDateTime());
+		message.setDateTime(LocalDateTime.now());
 		message.setSubject(messageDTO.getSubject());
 		message.setContent(messageDTO.getContent());
-		message.setUnread(messageDTO.isUnread());
+		message.setUnread(false);
 		account.addMessage(message);
 		
 		for (TagDTO tagDTO : messageDTO.getTags()) {
 			message.addTag(tagService.findOne(tagDTO.getId()));
 		}
 		
+//		for (Folder folder : account.getFolders()) {
+//			for (Rule rule : folder.getRules()) {
+//				Message m = rule.doRule(message);
+//				if (m != null && m != message)
+//					messageService.save(m);
+//			}
+//		}
+		storeMessageInAccountsSentFolder(message, account);
+		
+		boolean succesful = MailUtil.sendMessage(message);
+		
+		if (succesful) {
+			message = messageService.save(message);
+			return new ResponseEntity<MessageDTO>(new MessageDTO(message), HttpStatus.CREATED);
+		}
+		return new ResponseEntity<MessageDTO>(HttpStatus.INTERNAL_SERVER_ERROR);
+	}
+	
+	private void storeMessageInAccountsSentFolder(Message message, Account account) {
 		for (Folder folder : account.getFolders()) {
-			for (Rule rule : folder.getRules()) {
-				Message m = rule.doRule(message);
-				if (m != null && m != message)
-					messageService.save(m);
+			if (folder.getName().equalsIgnoreCase("sent")) {
+				folder.addMessage(message);
+				break;
 			}
 		}
+	}
+	
+//	@PostMapping(value = "/{id}", consumes = "application/json")
+//	public ResponseEntity<Boolean> sendMessage(@PathVariable("id") Long id) {
+//		User user = userService.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName());
+//		
+//		if(user == null) {
+//			return new ResponseEntity<Boolean>(false, HttpStatus.UNAUTHORIZED);
+//		}
+//		
+//		Message message = messageService.findOne(id);
+//		
+//		if (message == null) {
+//			return new ResponseEntity<Boolean>(false, HttpStatus.BAD_REQUEST);
+//		}
+//		if(!userOwnsMessage(user, message)) {
+//			return new ResponseEntity<Boolean>(false, HttpStatus.UNAUTHORIZED);
+//		}
+//		
+//		boolean succesful = MailUtil.sendMessage(message);
+//		
+//		if (succesful)
+//			return new ResponseEntity<Boolean>(true, HttpStatus.OK);
+//		else
+//			return new ResponseEntity<Boolean>(false, HttpStatus.INTERNAL_SERVER_ERROR);
+//		
+//	}
+	
+	@PutMapping(value = "/{id}")
+	public ResponseEntity<Boolean> markMessageAsRead(@PathVariable("id") Long id) {
+		User user = userService.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName());
+		
+		if(user == null) {
+			return new ResponseEntity<Boolean>(false, HttpStatus.UNAUTHORIZED);
+		}
+		
+		Message message = messageService.findOne(id);
+		
+		if (message == null) {
+			return new ResponseEntity<Boolean>(false, HttpStatus.BAD_REQUEST);
+		}
+		if(!userOwnsMessage(user, message)) {
+			return new ResponseEntity<Boolean>(false, HttpStatus.UNAUTHORIZED);
+		}
+		
+		message.setUnread(false);
 		
 		message = messageService.save(message);
-		return new ResponseEntity<MessageDTO>(new MessageDTO(message), HttpStatus.CREATED);
+		return new ResponseEntity<Boolean>(true, HttpStatus.OK);
 	}
 	
 	@PutMapping(value = "/{id}", consumes = "application/json")

@@ -1,6 +1,8 @@
 package osa.projekat.sf1528.emailClient.controller;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -89,6 +91,11 @@ public class FolderController {
 			return new ResponseEntity<List<MessageDTO>>(HttpStatus.UNAUTHORIZED);
 		
 		List<Message> messages = messageService.findByFolder(folder);
+		Collections.sort(messages, new Comparator<Message>() {
+			public int compare(Message m1, Message m2) {
+				return m1.getDateTime().isAfter(m2.getDateTime()) ? -1 : 1;
+			}
+		});
 		List<MessageDTO> folderMessages = new ArrayList<MessageDTO>();
 		for (Message message : messages) {
 			folderMessages.add(new MessageDTO(message));

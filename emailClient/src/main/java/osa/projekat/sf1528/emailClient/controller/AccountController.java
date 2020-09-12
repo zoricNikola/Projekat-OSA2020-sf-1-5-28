@@ -1,6 +1,8 @@
 package osa.projekat.sf1528.emailClient.controller;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -88,10 +90,30 @@ public class AccountController {
 		if (!userOwnsAccount(user, account))
 			return new ResponseEntity<List<MessageDTO>>(HttpStatus.UNAUTHORIZED);
 		
+		Map<String, Object> result = MailUtil.syncMessages(account);
+		
+		if (result == null) {
+//			return new ResponseEntity<List<MessageDTO>>(HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+		else {
+			@SuppressWarnings("unchecked")
+			List<Message> newMessages = (List<Message>) result.get("messages");
+			if (newMessages != null && newMessages.size() > 0) {
+				account.getMessages().addAll(newMessages);
+				MailUtil.storeMessagesInAccountsInboxFolder(newMessages, account);
+			}
+			account = accountService.save(account);
+		}
+		
 		List<Message> messages = messageService.findByAccount(account);
+		Collections.sort(messages, new Comparator<Message>() {
+			public int compare(Message m1, Message m2) {
+				return m1.getDateTime().isAfter(m2.getDateTime()) ? -1 : 1;
+			}
+		});
 		List<MessageDTO> accountMessages = new ArrayList<MessageDTO>();
-		for (Message message : messages) {
-			accountMessages.add(new MessageDTO(message));
+		for (int i = 0; i < messages.size(); i ++) {
+			accountMessages.add(new MessageDTO(messages.get(i)));
 		}
 		
 		return new ResponseEntity<List<MessageDTO>>(accountMessages, HttpStatus.OK);
@@ -185,19 +207,19 @@ public class AccountController {
 		
 		Folder f1 = new Folder();
 		f1.setName("Inbox");
-		Rule r1 = new Rule();
-		r1.setCondition(Condition.TO);
-		r1.setValue(account.getUsername());
-		r1.setOperation(Operation.MOVE);
-		f1.addRule(r1);
+//		Rule r1 = new Rule();
+//		r1.setCondition(Condition.TO);
+//		r1.setValue(account.getUsername());
+//		r1.setOperation(Operation.MOVE);
+//		f1.addRule(r1);
 		
 		Folder f2 = new Folder();
 		f2.setName("Sent");
-		Rule r2 = new Rule();
-		r2.setCondition(Condition.FROM);
-		r2.setValue(account.getUsername());
-		r2.setOperation(Operation.MOVE);
-		f2.addRule(r2);
+//		Rule r2 = new Rule();
+//		r2.setCondition(Condition.FROM);
+//		r2.setValue(account.getUsername());
+//		r2.setOperation(Operation.MOVE);
+//		f2.addRule(r2);
 		
 		Folder f3 = new Folder();
 		f3.setName("Drafts");

@@ -22,7 +22,7 @@ public class MessageDTO implements Serializable {
 	
 	private String bcc;
 	
-	private LocalDateTime dateTime;
+	private String dateTime;
 	
 	private String subject;
 	
@@ -34,7 +34,7 @@ public class MessageDTO implements Serializable {
 	
 	public MessageDTO() {}
 
-	public MessageDTO(Long id, String from, String to, String cc, String bcc, LocalDateTime dateTime, String subject,
+	public MessageDTO(Long id, String from, String to, String cc, String bcc, String dateTime, String subject,
 			String content, boolean unread) {
 		super();
 		this.id = id;
@@ -49,7 +49,7 @@ public class MessageDTO implements Serializable {
 	}
 
 	public MessageDTO(Message message) {
-		this(message.getId(), message.getFrom(), message.getTo(), message.getCc(), message.getBcc(), message.getDateTime(), 
+		this(message.getId(), message.getFrom(), message.getTo(), message.getCc(), message.getBcc(), message.getDateTime().toString(), 
 				message.getSubject(), message.getContent(), message.isUnread());
 		
 		for (Tag tag : message.getTags()) {
@@ -97,11 +97,11 @@ public class MessageDTO implements Serializable {
 		this.bcc = bcc;
 	}
 
-	public LocalDateTime getDateTime() {
+	public String getDateTime() {
 		return dateTime;
 	}
 
-	public void setDateTime(LocalDateTime dateTime) {
+	public void setDateTime(String dateTime) {
 		this.dateTime = dateTime;
 	}
 
