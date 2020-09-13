@@ -65,8 +65,8 @@ public class TestController {
 	@GetMapping(value = "/startData")
 	public ResponseEntity<Void> createStartData(){
 		User u1 = new User();
-		u1.setUsername("admin");
-		u1.setPassword(passwordEncoder.encode("admin"));
+		u1.setUsername("test");
+		u1.setPassword(passwordEncoder.encode("test"));
 		u1.setFirstName("Nikola");
 		u1.setLastName("Zoric");
 		
@@ -104,8 +104,8 @@ public class TestController {
 		a1.setInServerType(Account.InServerType.POP3);
 		a1.setInServerAddress("pop.gmail.com");
 		a1.setInServerPort(995);
-		a1.setUsername("nikola.se.zoric@gmail.com");
-		a1.setPassword("***********");
+		a1.setUsername("test.email.for.pmsu2020.project@gmail.com");
+		a1.setPassword("sifraZaMail0!");
 		a1.setDisplayName("Nikola Zoric");
 		
 		Folder f1 = new Folder();
@@ -128,6 +128,20 @@ public class TestController {
 		
 		Folder f5 = new Folder();
 		f5.setName("Drafts");
+		
+		Message m = new Message();
+		m.setFrom("znikoolaa@gmail.com");
+		m.setTo("test.email.for.pmsu2020.project@gmail.com");
+		m.setCc("");
+		m.setBcc("");
+		m.setDateTime(LocalDateTime.now());
+		m.setSubject("Subject");
+		m.setContent("This is content of the message");
+		m.setUnread(true);
+		m.addTag(t1);
+		m.addTag(t2);
+		f1.addMessage(m);
+		a1.addMessage(m);
 		
 //		Folder f3 = new Folder();
 //		f3.setName("Spam");
