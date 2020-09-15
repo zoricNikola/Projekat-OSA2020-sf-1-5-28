@@ -1,5 +1,6 @@
 package osa.projekat.sf1528.emailClient.mail;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -11,7 +12,6 @@ import java.util.Properties;
 
 import javax.mail.Address;
 import javax.mail.Flags;
-import javax.mail.Folder;
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
 import javax.mail.NoSuchProviderException;
@@ -25,9 +25,11 @@ import javax.mail.util.ByteArrayDataSource;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.util.StreamUtils;
 
 import osa.projekat.sf1528.emailClient.model.Account;
 import osa.projekat.sf1528.emailClient.model.Attachment;
+import osa.projekat.sf1528.emailClient.model.Folder;
 import osa.projekat.sf1528.emailClient.model.Message;
 import osa.projekat.sf1528.emailClient.util.Base64;
 
@@ -108,8 +110,8 @@ public class MailUtil {
 			
 			store.connect(account.getInServerAddress(), account.getUsername(), account.getPassword());
 			
-			Folder inboxFolder = store.getFolder("INBOX");
-			inboxFolder.open(Folder.READ_ONLY);
+			javax.mail.Folder inboxFolder = store.getFolder("INBOX");
+			inboxFolder.open(javax.mail.Folder.READ_ONLY);
 			
 			account.setLastMailSync(LocalDateTime.now());
 			javax.mail.Message[] messages = inboxFolder.getMessages();
@@ -122,12 +124,16 @@ public class MailUtil {
 					javax.mail.Message message = messages[i];
 					if ( LocalDateTime.ofInstant(message.getSentDate().toInstant(), 
 								ZoneId.systemDefault()).isAfter(lastSync)) {
-					
-						Message myMessage = javaxMessageToMyMessage(message);
-						myMessage.setAccount(account);
-	//					account.addMessage(myMessage);
-	//					storeInAccountsInboxFolder(myMessage, account);
-						myMessages.add(myMessage);
+						try {
+							Message myMessage = javaxMessageToMyMessage(message);
+							myMessage.setAccount(account);
+							//					account.addMessage(myMessage);
+							//					storeInAccountsInboxFolder(myMessage, account);
+							myMessages.add(myMessage);
+							
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
 					}
 					else {
 						break;
@@ -138,11 +144,16 @@ public class MailUtil {
 				result.put("mode", "startData");
 				for (int i = (messages.length - 1); i > -1; i--) {
 					javax.mail.Message message = messages[i];
-					Message myMessage = javaxMessageToMyMessage(message);
-					myMessage.setAccount(account);
-	//				account.addMessage(myMessage);
-	//				storeInAccountsInboxFolder(myMessage, account);
-					myMessages.add(myMessage);
+					try {
+						Message myMessage = javaxMessageToMyMessage(message);
+						myMessage.setAccount(account);
+						//				account.addMessage(myMessage);
+						//				storeInAccountsInboxFolder(myMessage, account);
+						myMessages.add(myMessage);
+						
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
 				}
 			}
 			
@@ -158,9 +169,9 @@ public class MailUtil {
 		} catch (MessagingException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
 		}
 		
 		account.setLastMailSync(lastSync);
@@ -213,35 +224,61 @@ public class MailUtil {
 		
 		message.setUnread(!javaxMessage.isSet(Flags.Flag.SEEN));
 		
-		if (javaxMessage.getContentType().contains("text/plain") || javaxMessage.getContentType().contains("text/html")) {
-			message.setContent(javaxMessage.getContent().toString());
-		}
-		else if (javaxMessage.getContentType().contains("multipart")) {
+		if (javaxMessage.getContentType().toLowerCase().contains("multipart")) {
 			Multipart mp = (Multipart) javaxMessage.getContent();
 			for (int i = 0; i < mp.getCount(); i++) {
 				proccessPart(mp.getBodyPart(i), message);
 			}
+		}
+		else if (javaxMessage.getContentType().toLowerCase().contains("text")) {
+			message.setContent(javaxMessage.getContent().toString());
 		}
 		
 		return message;
 	}
 	
 	private static void proccessPart(Part part, Message message) throws MessagingException, IOException {
-		if (part.getContentType().contains("text/plain") || part.getContentType().contains("text/html")) {
-			message.setContent(part.getContent().toString());
+		if (part.getContentType().toLowerCase().contains("text")) {
+			if (message.getContent() != null)
+				message.setContent(message.getContent() + part.getContent().toString());
+			else
+				message.setContent(part.getContent().toString());
 		}
-		else if (part.getContentType().contains("multipart")) {
-			if (part.getContent() instanceof MimeMultipart) {
-				MimeMultipart mp = (MimeMultipart) part.getContent();
-				message.setContent(mp.getBodyPart(0).getContent().toString());
+		else if (part.getContentType().toLowerCase().contains("multipart")) {
+			Multipart mp = (Multipart) part.getContent();
+			for (int i = 0; i < mp.getCount(); i++) {
+				proccessPart(mp.getBodyPart(i), message);
 			}
+//			if (part.getContent() instanceof MimeMultipart) {
+//				MimeMultipart mp = (MimeMultipart) part.getContent();
+//				message.setContent(message.getContent() + mp.getBodyPart(0).getContent().toString());
+//			}
 		}
 		else {
 			if (part.getDisposition() != null && part.getDisposition().equalsIgnoreCase(Part.ATTACHMENT) 
 					&& part.getFileName() != null && !part.getFileName().isEmpty()) {
-				byte[] attachmentBytes = new byte[8192];
-				IOUtils.readFully(part.getInputStream(), attachmentBytes);
+				
+//				------ 1 ------------
+//				byte[] attachmentBytes = new byte[part.getSize()];
+//				IOUtils.readFully(part.getInputStream(), attachmentBytes);
+//				String encodedAttachment = Base64.encodeToString(attachmentBytes);
+//				----------------------
+//				
+//				------ 2 -------------
+//				ByteArrayOutputStream os = new ByteArrayOutputStream();
+//				byte[] attachmentBytes = new byte[8192];
+//				
+//				int read;
+//				while ((read = part.getInputStream().read(attachmentBytes)) != -1)
+//					os.write(attachmentBytes, 0, read);
+//				
+//				String encodedAttachment = Base64.encodeToString(os.toByteArray());
+//				
+//				
+//				----- 3 ----------------
+				byte[] attachmentBytes = StreamUtils.copyToByteArray(part.getInputStream());
 				String encodedAttachment = Base64.encodeToString(attachmentBytes);
+//				------------------------
 				
 				Attachment attachment = new Attachment();
 				attachment.setName(part.getFileName());
@@ -252,9 +289,35 @@ public class MailUtil {
 		}
 	}
 	
+	public static void storeMessagesInFolders(List<Message> messages, Account account) {
+		List<Message> inboxMessages = new ArrayList<Message>();
+		List<Message> sentMessages = new ArrayList<Message>();
+		
+		for (Message message : messages) {
+			if (message.getTo().contains(account.getUsername()))
+				inboxMessages.add(message);
+			if (message.getFrom().contains(account.getUsername()))
+				sentMessages.add(message);
+		}
+		
+		storeMessagesInAccountsInboxFolder(inboxMessages, account);
+		storeMessagesInAccountsSentFolder(sentMessages, account);
+		
+	}
+	
 	public static void storeMessagesInAccountsInboxFolder(List<Message> messages, Account account) {
-		for (osa.projekat.sf1528.emailClient.model.Folder folder : account.getFolders()) {
+		for (Folder folder : account.getFolders()) {
 			if (folder.getName().equalsIgnoreCase("inbox")) {
+				for (Message message : messages)
+					folder.addMessage(message);
+				break;
+			}
+		}
+	}
+	
+	public static void storeMessagesInAccountsSentFolder(List<Message> messages, Account account) {
+		for (Folder folder : account.getFolders()) {
+			if (folder.getName().equalsIgnoreCase("sent")) {
 				for (Message message : messages)
 					folder.addMessage(message);
 				break;
