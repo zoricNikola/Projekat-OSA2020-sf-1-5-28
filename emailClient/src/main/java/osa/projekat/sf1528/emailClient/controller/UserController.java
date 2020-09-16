@@ -127,10 +127,13 @@ public class UserController {
 		if (user == null || user.getId() != id)
 			return new ResponseEntity<UserDTO>(HttpStatus.UNAUTHORIZED);
 		
-		user.setUsername(userDTO.getUsername());
-		user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
-		user.setFirstName(userDTO.getFirstName());
-		user.setLastName(userDTO.getLastName());
+//		user.setUsername(userDTO.getUsername());
+		if (userDTO.getPassword() != null && !userDTO.getPassword().isEmpty())
+			user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
+		else {
+			user.setFirstName(userDTO.getFirstName());
+			user.setLastName(userDTO.getLastName());
+		}
 		
 		user = userService.save(user);
 		user.setPassword(null);
