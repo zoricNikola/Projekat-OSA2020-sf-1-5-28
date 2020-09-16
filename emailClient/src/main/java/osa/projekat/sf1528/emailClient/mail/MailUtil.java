@@ -182,8 +182,11 @@ public class MailUtil {
 		Message message = new Message();
 		Address[] addresses;
 		StringBuilder sb;
-		
-		message.setFrom(javaxMessage.getFrom()[0].toString());
+		try {
+			message.setFrom(javaxMessage.getFrom()[0].toString().split("<")[1].split(">")[0]);
+		} catch (Exception e) {
+			message.setFrom(javaxMessage.getFrom()[0].toString());
+		}
 		
 		if ((addresses = javaxMessage.getRecipients(javax.mail.Message.RecipientType.TO)) != null) {
 			sb = new StringBuilder("");

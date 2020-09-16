@@ -219,7 +219,7 @@ public class MessageController {
 //		
 //	}
 	
-	@PutMapping(value = "/{id}")
+	@PutMapping(value = "/{id}/markAsRead")
 	public ResponseEntity<Boolean> markMessageAsRead(@PathVariable("id") Long id) {
 		User user = userService.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName());
 		
