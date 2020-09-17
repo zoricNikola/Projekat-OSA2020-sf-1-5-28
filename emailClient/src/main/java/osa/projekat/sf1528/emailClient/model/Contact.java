@@ -9,6 +9,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
@@ -38,7 +39,7 @@ public class Contact implements Serializable {
 	@Column(name = "note", unique = false, nullable = false)
 	private String note;
 	
-	@Column(name = "photo_path", unique = false, nullable = false)
+	@Column(name = "photo_path", unique = false, nullable = true)
 	private String photoPath;
 	
 	@ManyToOne

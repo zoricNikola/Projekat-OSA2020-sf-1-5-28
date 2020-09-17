@@ -21,6 +21,8 @@ import osa.projekat.sf1528.emailClient.security.LoginDTO;
 import osa.projekat.sf1528.emailClient.security.TokenDTO;
 import osa.projekat.sf1528.emailClient.service.CustomUserDetailsService;
 import osa.projekat.sf1528.emailClient.service.UserService;
+import osa.projekat.sf1528.emailClient.util.Base64;
+import osa.projekat.sf1528.emailClient.util.FilesUtil;
 import osa.projekat.sf1528.emailClient.util.TokenUtil;
 
 @RestController
@@ -80,6 +82,14 @@ public class AuthenticationController {
 		user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
 		user.setFirstName(userDTO.getFirstName());
 		user.setLastName(userDTO.getLastName());
+		
+		if (userDTO.getEncodedAvatarData() != null && !userDTO.getEncodedAvatarData().isEmpty()) {
+			byte[] photoData = Base64.decode(userDTO.getEncodedAvatarData());
+			String path = String.format("./data/userAvatars/%s", user.getUsername());
+			
+			if (FilesUtil.saveBytes(photoData, path))
+				user.setAvatarPath(path);
+		}
 		
 		user = userService.save(user);
 		user.setPassword(null);

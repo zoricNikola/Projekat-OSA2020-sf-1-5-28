@@ -3,6 +3,8 @@ package osa.projekat.sf1528.emailClient.dto;
 import java.io.Serializable;
 
 import osa.projekat.sf1528.emailClient.model.User;
+import osa.projekat.sf1528.emailClient.util.Base64;
+import osa.projekat.sf1528.emailClient.util.FilesUtil;
 
 public class UserDTO implements Serializable{
 
@@ -13,20 +15,25 @@ public class UserDTO implements Serializable{
 	private String password;
 	private String firstName;
 	private String lastName;
+	private String encodedAvatarData;
 	
 	public UserDTO() {}
 	
-	public UserDTO(Long id, String username, String password, String firstName, String lastName) {
+	public UserDTO(Long id, String username, String password, String firstName, String lastName, String encodedAvatarData) {
 		super();
 		this.id = id;
 		this.username = username;
 		this.password = password;
 		this.firstName = firstName;
 		this.lastName = lastName;
+		this.encodedAvatarData = encodedAvatarData;
 	}
 	
 	public UserDTO(User user) {
-		this(user.getId(), user.getUsername(), user.getPassword(), user.getFirstName(), user.getLastName());
+		this(user.getId(), user.getUsername(), user.getPassword(), user.getFirstName(), user.getLastName(), user.getAvatarPath());
+		
+		if (user.getAvatarPath() != null && !user.getAvatarPath().isEmpty())
+			this.encodedAvatarData = Base64.encodeToString(FilesUtil.readBytes(user.getAvatarPath()));
 	}
 	
 	
@@ -60,6 +67,14 @@ public class UserDTO implements Serializable{
 	public void setLastName(String lastName) {
 		this.lastName = lastName;
 	}
+	public String getEncodedAvatarData() {
+		return encodedAvatarData;
+	}
+
+	public void setEncodedAvatarData(String encodedAvatarData) {
+		this.encodedAvatarData = encodedAvatarData;
+	}
+
 	public static long getSerialversionuid() {
 		return serialVersionUID;
 	}

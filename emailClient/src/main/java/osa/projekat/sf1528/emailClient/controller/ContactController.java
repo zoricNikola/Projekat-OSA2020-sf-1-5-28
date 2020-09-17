@@ -1,5 +1,10 @@
 package osa.projekat.sf1528.emailClient.controller;
 
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
+import org.apache.tomcat.util.http.fileupload.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +23,8 @@ import osa.projekat.sf1528.emailClient.model.Contact;
 import osa.projekat.sf1528.emailClient.model.User;
 import osa.projekat.sf1528.emailClient.service.ContactService;
 import osa.projekat.sf1528.emailClient.service.UserService;
+import osa.projekat.sf1528.emailClient.util.Base64;
+import osa.projekat.sf1528.emailClient.util.FilesUtil;
 
 @RestController
 @RequestMapping(value = "api/contacts")
@@ -67,10 +74,19 @@ public class ContactController {
 		contact.setDisplayName(contactDTO.getDisplayName());
 		contact.setEmail(contactDTO.getEmail());
 		contact.setNote(contactDTO.getNote());
-		contact.setPhotoPath(contactDTO.getPhotoPath());
 		user.addContact(contact);
 		
 		contact = contactService.save(contact);
+		
+		if (contactDTO.getEncodedPhotoData() != null && !contactDTO.getEncodedPhotoData().isEmpty()) {
+			byte[] photoData = Base64.decode(contactDTO.getEncodedPhotoData());
+			String path = String.format("./data/contactPhotos/%d", contact.getId());
+			
+			if (FilesUtil.saveBytes(photoData, path)) {
+				contact.setPhotoPath(path);
+				contact = contactService.save(contact);
+			}
+		}
 		return new ResponseEntity<ContactDTO>(new ContactDTO(contact), HttpStatus.CREATED);
 	}
 	
@@ -94,7 +110,14 @@ public class ContactController {
 		contact.setDisplayName(contactDTO.getDisplayName());
 		contact.setEmail(contactDTO.getEmail());
 		contact.setNote(contactDTO.getNote());
-		contact.setPhotoPath(contactDTO.getPhotoPath());
+		
+		if (contactDTO.getEncodedPhotoData() != null && !contactDTO.getEncodedPhotoData().isEmpty()) {
+			byte[] photoData = Base64.decode(contactDTO.getEncodedPhotoData());
+			String path = String.format("./data/contactPhotos/%d", id);
+			
+			if (FilesUtil.saveBytes(photoData, path))
+				contact.setPhotoPath(path);
+		}
 		
 		contact = contactService.save(contact);
 		return new ResponseEntity<ContactDTO>(new ContactDTO(contact), HttpStatus.CREATED);

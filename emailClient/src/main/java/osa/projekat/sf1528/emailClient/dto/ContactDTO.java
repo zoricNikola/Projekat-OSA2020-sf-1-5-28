@@ -3,6 +3,8 @@ package osa.projekat.sf1528.emailClient.dto;
 import java.io.Serializable;
 
 import osa.projekat.sf1528.emailClient.model.Contact;
+import osa.projekat.sf1528.emailClient.util.Base64;
+import osa.projekat.sf1528.emailClient.util.FilesUtil;
 
 public class ContactDTO implements Serializable {
 
@@ -20,12 +22,12 @@ public class ContactDTO implements Serializable {
 	
 	private String note;
 	
-	private String photoPath;
+	private String encodedPhotoData;
 	
 	public ContactDTO() {}
 
 	public ContactDTO(Long id, String firstName, String lastName, String displayName, String email, String note,
-			String photoPath) {
+			String encodedPhotoData) {
 		super();
 		this.id = id;
 		this.firstName = firstName;
@@ -33,12 +35,16 @@ public class ContactDTO implements Serializable {
 		this.displayName = displayName;
 		this.email = email;
 		this.note = note;
-		this.photoPath = photoPath;
+		this.encodedPhotoData = encodedPhotoData;
 	}
 	
 	public ContactDTO(Contact contact) {
 		this(contact.getId(), contact.getFirstName(), contact.getLastName(), contact.getDisplayName(), contact.getEmail(), 
 				contact.getNote(), contact.getPhotoPath());
+		
+		if (contact.getPhotoPath() != null && !contact.getPhotoPath().isEmpty())
+			this.encodedPhotoData = Base64.encodeToString(FilesUtil.readBytes(contact.getPhotoPath()));
+		
 	}
 
 	public Long getId() {
@@ -89,12 +95,12 @@ public class ContactDTO implements Serializable {
 		this.note = note;
 	}
 
-	public String getPhotoPath() {
-		return photoPath;
+	public String getEncodedPhotoData() {
+		return encodedPhotoData;
 	}
 
-	public void setPhotoPath(String photoPath) {
-		this.photoPath = photoPath;
+	public void setEncodedPhotoData(String encodedPhotoData) {
+		this.encodedPhotoData = encodedPhotoData;
 	}
 
 	public static long getSerialversionuid() {

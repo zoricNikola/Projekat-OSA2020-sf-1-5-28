@@ -29,6 +29,8 @@ import osa.projekat.sf1528.emailClient.service.AccountService;
 import osa.projekat.sf1528.emailClient.service.ContactService;
 import osa.projekat.sf1528.emailClient.service.TagService;
 import osa.projekat.sf1528.emailClient.service.UserService;
+import osa.projekat.sf1528.emailClient.util.Base64;
+import osa.projekat.sf1528.emailClient.util.FilesUtil;
 
 @RestController
 @RequestMapping(value = "api/users")
@@ -133,6 +135,14 @@ public class UserController {
 		else {
 			user.setFirstName(userDTO.getFirstName());
 			user.setLastName(userDTO.getLastName());
+		}
+		
+		if (userDTO.getEncodedAvatarData() != null && !userDTO.getEncodedAvatarData().isEmpty()) {
+			byte[] photoData = Base64.decode(userDTO.getEncodedAvatarData());
+			String path = String.format("./data/userAvatars/%s", user.getUsername());
+			
+			if (FilesUtil.saveBytes(photoData, path))
+				user.setAvatarPath(path);
 		}
 		
 		user = userService.save(user);

@@ -37,6 +37,9 @@ public class User implements Serializable{
 	@Column(name = "last_name", unique = false, nullable = false)
 	private String lastName;
 	
+	@Column(name = "avatar_path", unique = false, nullable = true)
+	private String avatarPath;
+	
 	@OneToMany(cascade = {CascadeType.ALL}, fetch = FetchType.LAZY, mappedBy = "user")
 	private Set<Account> accounts = new HashSet<Account>();
 	
@@ -123,6 +126,14 @@ public class User implements Serializable{
 
 	public void setLastName(String lastName) {
 		this.lastName = lastName;
+	}
+
+	public String getAvatarPath() {
+		return avatarPath;
+	}
+
+	public void setAvatarPath(String avatarPath) {
+		this.avatarPath = avatarPath;
 	}
 
 	public Set<Account> getAccounts() {
