@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 import osa.projekat.sf1528.emailClient.dto.FolderDTO;
 import osa.projekat.sf1528.emailClient.dto.MessageDTO;
 import osa.projekat.sf1528.emailClient.dto.RuleDTO;
+import osa.projekat.sf1528.emailClient.mail.MailUtil;
 import osa.projekat.sf1528.emailClient.model.Account;
 import osa.projekat.sf1528.emailClient.model.Folder;
 import osa.projekat.sf1528.emailClient.model.Message;
@@ -220,8 +221,10 @@ public class FolderController {
 				toAddRules.add(uR);
 		}
 		
-		for (Rule r : toDeleteRules)
+		for (Rule r : toDeleteRules) {
 			folder.removeRule(r);
+			ruleService.remove(r.getId());
+		}
 		
 		for (RuleDTO ruleDTO : toAddRules) {
 			Rule rule = new Rule();
@@ -238,6 +241,27 @@ public class FolderController {
 			rules.add(new RuleDTO(r));
 		
 		return new ResponseEntity<List<RuleDTO>>(rules, HttpStatus.CREATED);
+	}
+	
+	
+	@GetMapping(value = "/{id}/doRules")
+	public ResponseEntity<Void> doRules(@PathVariable("id") Long id) {
+		User user = userService.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName());
+		
+		if (user == null)
+			return new ResponseEntity<Void>(HttpStatus.UNAUTHORIZED);
+		
+		Folder folder = folderService.findOne(id);
+		
+		if (folder == null)
+			return new ResponseEntity<Void>(HttpStatus.NOT_FOUND);
+		
+		if (!userOwnsFolder(user, folder))
+			return new ResponseEntity<Void>(HttpStatus.UNAUTHORIZED);
+		
+		MailUtil.doRulesForAllMessages(new ArrayList<Rule>(folder.getRules()), messageService);
+		
+		return new ResponseEntity<Void>(HttpStatus.CREATED);
 	}
 	
 	@PostMapping(value = "/{accountId}", consumes = "application/json")

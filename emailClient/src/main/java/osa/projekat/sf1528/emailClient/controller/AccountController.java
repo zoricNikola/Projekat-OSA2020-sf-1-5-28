@@ -104,7 +104,7 @@ public class AccountController {
 			List<Message> newMessages = (List<Message>) result.get("messages");
 			if (newMessages != null && newMessages.size() > 0) {
 				account.getMessages().addAll(newMessages);
-				MailUtil.storeMessagesInFolders(newMessages, account);
+				MailUtil.storeMessagesInFolders(newMessages, account, messageService, folderService);
 			}
 			account = accountService.save(account);
 		}

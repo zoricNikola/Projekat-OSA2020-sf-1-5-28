@@ -121,6 +121,7 @@ public class Rule implements Serializable{
 			}
 			case COPY: {
 				Message copy = Message.copyOf(message);
+				copy.setFolder(this.destination);
 				this.destination.addMessage(copy);
 				return copy;
 			}

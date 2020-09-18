@@ -31,6 +31,9 @@ import osa.projekat.sf1528.emailClient.model.Account;
 import osa.projekat.sf1528.emailClient.model.Attachment;
 import osa.projekat.sf1528.emailClient.model.Folder;
 import osa.projekat.sf1528.emailClient.model.Message;
+import osa.projekat.sf1528.emailClient.model.Rule;
+import osa.projekat.sf1528.emailClient.service.FolderService;
+import osa.projekat.sf1528.emailClient.service.MessageService;
 import osa.projekat.sf1528.emailClient.util.Base64;
 
 public class MailUtil {
@@ -292,20 +295,72 @@ public class MailUtil {
 		}
 	}
 	
-	public static void storeMessagesInFolders(List<Message> messages, Account account) {
+	public static void storeMessagesInFolders(List<Message> messages, Account account, MessageService messageService, FolderService folderService) {
+		
+		doRulesForIncomingMessages(messages, account, messageService, folderService);
+		
 		List<Message> inboxMessages = new ArrayList<Message>();
 		List<Message> sentMessages = new ArrayList<Message>();
 		
 		for (Message message : messages) {
-			if (message.getTo().contains(account.getUsername()))
-				inboxMessages.add(message);
-			if (message.getFrom().contains(account.getUsername()))
-				sentMessages.add(message);
+			if (message.getFolder() == null) {
+				if (message.getTo().contains(account.getUsername())
+						|| message.getCc().contains(account.getUsername())
+						|| message.getBcc().contains(account.getUsername()))
+					inboxMessages.add(message);
+				if (message.getFrom().contains(account.getUsername()))
+					sentMessages.add(message);
+			}
 		}
 		
 		storeMessagesInAccountsInboxFolder(inboxMessages, account);
 		storeMessagesInAccountsSentFolder(sentMessages, account);
 		
+	}
+	
+	public static void doRulesForAllMessages(List<Rule> rules, MessageService messageService) {
+		if (rules.size() > 0) {
+			List<Message> messages = new ArrayList<Message>();
+			messages.addAll(rules.get(0).getDestination().getAccount().getMessages());
+			
+			for (Message message : messages) {
+				for (Rule rule : rules) {
+					Message m = rule.doRule(message);
+					if (m != null)
+						messageService.save(rule.doRule(message));
+				}
+			}
+			
+		}
+	}
+	
+	public static void doRulesForIncomingMessages(List<Message> messages, Account account, MessageService messageService, FolderService folderService) {
+		List<Folder> rootFolders = new ArrayList<Folder>();
+		for (Folder folder : account.getFolders()) {
+			if (folder.getParent() == null) {
+				rootFolders.add(folder);
+			}
+		}
+		
+		for (Message message : messages) {
+			doRulesForMessage(message, rootFolders, messageService, folderService);
+			messageService.save(message);
+		}
+	}
+	
+	public static void doRulesForMessage(Message message, List<Folder> folders, MessageService messageService, FolderService folderService) {
+		List<Folder> nextLayerFolders = new ArrayList<Folder>();
+		for (Folder folder : folders) {
+			for (Rule rule : folder.getRules()) {
+				rule.doRule(message);
+//				messageService.save(rule.doRule(message));
+				
+			}
+			nextLayerFolders.addAll(folder.getChildFolders());
+		}
+		
+		if (nextLayerFolders.size() > 0)
+			doRulesForMessage(message, nextLayerFolders, messageService, folderService);
 	}
 	
 	public static void storeMessagesInAccountsInboxFolder(List<Message> messages, Account account) {
