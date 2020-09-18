@@ -28,6 +28,9 @@ public class Tag implements Serializable {
 	@Column(name = "name", unique = false, nullable = false)
 	private String name;
 	
+	@Column(name = "chip_color", unique = false, nullable = true)
+	private int color;
+	
 	@ManyToMany(mappedBy = "tags")
 	private Set<Message> messages = new HashSet<Message>();
 	
@@ -51,6 +54,14 @@ public class Tag implements Serializable {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public int getColor() {
+		return color;
+	}
+
+	public void setColor(int color) {
+		this.color = color;
 	}
 
 	public Set<Message> getMessages() {

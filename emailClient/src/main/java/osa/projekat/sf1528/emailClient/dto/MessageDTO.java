@@ -3,10 +3,17 @@ package osa.projekat.sf1528.emailClient.dto;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
+import osa.projekat.sf1528.emailClient.model.Contact;
 import osa.projekat.sf1528.emailClient.model.Message;
 import osa.projekat.sf1528.emailClient.model.Tag;
+import osa.projekat.sf1528.emailClient.service.ContactService;
+import osa.projekat.sf1528.emailClient.util.Base64;
+import osa.projekat.sf1528.emailClient.util.FilesUtil;
 
 public class MessageDTO implements Serializable {
 
@@ -32,6 +39,10 @@ public class MessageDTO implements Serializable {
 	
 	private Set<TagDTO> tags = new HashSet<TagDTO>();
 	
+	private String contactDisplayName;
+	
+	private String encodedContactPhoto;
+	
 	public MessageDTO() {}
 
 	public MessageDTO(Long id, String from, String to, String cc, String bcc, String dateTime, String subject,
@@ -48,12 +59,25 @@ public class MessageDTO implements Serializable {
 		this.unread = unread;
 	}
 
-	public MessageDTO(Message message) {
+	public MessageDTO(Message message, ContactService contactService) {
 		this(message.getId(), message.getFrom(), message.getTo(), message.getCc(), message.getBcc(), message.getDateTime().toString(), 
 				message.getSubject(), message.getContent(), message.isUnread());
 		
 		for (Tag tag : message.getTags()) {
 			this.tags.add(new TagDTO(tag));
+		}
+		
+		List<Contact> contacts = contactService.findByUser(message.getAccount().getUser());
+		for (Contact contact : contacts) {
+			if (message.getFrom().contains(contact.getEmail()) || message.getTo().contains(contact.getEmail())) {
+				this.contactDisplayName = contact.getDisplayName();
+				if (contact.getPhotoPath() != null && !contact.getPhotoPath().isEmpty()) {
+					byte[] photoData = FilesUtil.readBytes(contact.getPhotoPath());
+					if (photoData != null)
+						this.encodedContactPhoto = Base64.encodeToString(photoData);
+				}
+				break;
+			}
 		}
 	}
 	
@@ -139,6 +163,22 @@ public class MessageDTO implements Serializable {
 
 	public void setTags(Set<TagDTO> tags) {
 		this.tags = tags;
+	}
+
+	public String getContactDisplayName() {
+		return contactDisplayName;
+	}
+
+	public void setContactDisplayName(String contactDisplayName) {
+		this.contactDisplayName = contactDisplayName;
+	}
+
+	public String getEncodedContactPhoto() {
+		return encodedContactPhoto;
+	}
+
+	public void setEncodedContactPhoto(String encodedContactPhoto) {
+		this.encodedContactPhoto = encodedContactPhoto;
 	}
 	
 

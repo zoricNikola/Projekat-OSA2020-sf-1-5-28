@@ -12,16 +12,19 @@ public class TagDTO implements Serializable {
 	
 	private String name;
 	
+	private int color;
+	
 	public TagDTO() {}
 
-	public TagDTO(Long id, String name) {
+	public TagDTO(Long id, String name, int color) {
 		super();
 		this.id = id;
 		this.name = name;
+		this.color = color;
 	}
 	
 	public TagDTO(Tag tag) {
-		this(tag.getId(), tag.getName());
+		this(tag.getId(), tag.getName(), tag.getColor());
 	}
 
 	public Long getId() {
@@ -38,6 +41,14 @@ public class TagDTO implements Serializable {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public int getColor() {
+		return color;
+	}
+
+	public void setColor(int color) {
+		this.color = color;
 	}
 
 	public static long getSerialversionuid() {

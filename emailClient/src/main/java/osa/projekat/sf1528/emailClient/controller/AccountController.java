@@ -32,6 +32,7 @@ import osa.projekat.sf1528.emailClient.model.User;
 import osa.projekat.sf1528.emailClient.model.Rule.Condition;
 import osa.projekat.sf1528.emailClient.model.Rule.Operation;
 import osa.projekat.sf1528.emailClient.service.AccountService;
+import osa.projekat.sf1528.emailClient.service.ContactService;
 import osa.projekat.sf1528.emailClient.service.FolderService;
 import osa.projekat.sf1528.emailClient.service.MessageService;
 import osa.projekat.sf1528.emailClient.service.UserService;
@@ -51,6 +52,9 @@ public class AccountController {
 	
 	@Autowired
 	FolderService folderService;
+	
+	@Autowired
+	ContactService contactService;
 	
 	private boolean userOwnsAccount(User user, Account account) {
 		return user.getId() == account.getUser().getId();
@@ -113,7 +117,7 @@ public class AccountController {
 		});
 		List<MessageDTO> accountMessages = new ArrayList<MessageDTO>();
 		for (int i = 0; i < messages.size(); i ++) {
-			accountMessages.add(new MessageDTO(messages.get(i)));
+			accountMessages.add(new MessageDTO(messages.get(i), contactService));
 		}
 		
 		return new ResponseEntity<List<MessageDTO>>(accountMessages, HttpStatus.OK);
@@ -152,7 +156,7 @@ public class AccountController {
 		
 		List<MessageDTO> newMessagesDTO = new ArrayList<MessageDTO>();
 		for (Message message : newMessages) {
-			newMessagesDTO.add(new MessageDTO(message));
+			newMessagesDTO.add(new MessageDTO(message, contactService));
 		}
 		
 		resultDTO.put("messages", newMessagesDTO);

@@ -42,9 +42,11 @@ public class ContactDTO implements Serializable {
 		this(contact.getId(), contact.getFirstName(), contact.getLastName(), contact.getDisplayName(), contact.getEmail(), 
 				contact.getNote(), contact.getPhotoPath());
 		
-		if (contact.getPhotoPath() != null && !contact.getPhotoPath().isEmpty())
-			this.encodedPhotoData = Base64.encodeToString(FilesUtil.readBytes(contact.getPhotoPath()));
-		
+		if (contact.getPhotoPath() != null && !contact.getPhotoPath().isEmpty()) {
+			byte[] photoData = FilesUtil.readBytes(contact.getPhotoPath());
+			if (photoData != null)
+				this.encodedPhotoData = Base64.encodeToString(photoData);
+		}
 	}
 
 	public Long getId() {

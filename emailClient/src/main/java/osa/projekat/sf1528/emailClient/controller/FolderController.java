@@ -29,6 +29,7 @@ import osa.projekat.sf1528.emailClient.model.Message;
 import osa.projekat.sf1528.emailClient.model.Rule;
 import osa.projekat.sf1528.emailClient.model.User;
 import osa.projekat.sf1528.emailClient.service.AccountService;
+import osa.projekat.sf1528.emailClient.service.ContactService;
 import osa.projekat.sf1528.emailClient.service.FolderService;
 import osa.projekat.sf1528.emailClient.service.MessageService;
 import osa.projekat.sf1528.emailClient.service.RuleService;
@@ -52,6 +53,9 @@ public class FolderController {
 	
 	@Autowired
 	AccountService accountService;
+	
+	@Autowired
+	ContactService contactService;
 	
 	private boolean userOwnsFolder(User user, Folder folder) {
 		return user.getId() == folder.getAccount().getUser().getId();
@@ -98,7 +102,7 @@ public class FolderController {
 		});
 		List<MessageDTO> folderMessages = new ArrayList<MessageDTO>();
 		for (Message message : messages) {
-			folderMessages.add(new MessageDTO(message));
+			folderMessages.add(new MessageDTO(message, contactService));
 		}
 		
 		return new ResponseEntity<List<MessageDTO>>(folderMessages, HttpStatus.OK);

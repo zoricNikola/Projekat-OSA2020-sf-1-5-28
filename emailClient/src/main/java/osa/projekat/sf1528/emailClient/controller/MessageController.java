@@ -32,6 +32,7 @@ import osa.projekat.sf1528.emailClient.model.Tag;
 import osa.projekat.sf1528.emailClient.model.User;
 import osa.projekat.sf1528.emailClient.service.AccountService;
 import osa.projekat.sf1528.emailClient.service.AttachmentService;
+import osa.projekat.sf1528.emailClient.service.ContactService;
 import osa.projekat.sf1528.emailClient.service.FolderService;
 import osa.projekat.sf1528.emailClient.service.MessageService;
 import osa.projekat.sf1528.emailClient.service.TagService;
@@ -59,6 +60,9 @@ public class MessageController {
 	@Autowired
 	UserService userService;
 	
+	@Autowired
+	ContactService contactService;
+	
 	private boolean userOwnsMessage(User user, Message message) {
 		return user.getId() == message.getAccount().getUser().getId();
 	}
@@ -80,7 +84,7 @@ public class MessageController {
 			return new ResponseEntity<MessageDTO>(HttpStatus.UNAUTHORIZED);
 		}
 		
-		return new ResponseEntity<MessageDTO>(new MessageDTO(message), HttpStatus.OK);
+		return new ResponseEntity<MessageDTO>(new MessageDTO(message, contactService), HttpStatus.OK);
 	}
 	
 	@GetMapping(value="/{id}/tags")
@@ -179,7 +183,7 @@ public class MessageController {
 		
 		if (succesful) {
 			message = messageService.save(message);
-			return new ResponseEntity<MessageDTO>(new MessageDTO(message), HttpStatus.CREATED);
+			return new ResponseEntity<MessageDTO>(new MessageDTO(message, contactService), HttpStatus.CREATED);
 		}
 		return new ResponseEntity<MessageDTO>(HttpStatus.INTERNAL_SERVER_ERROR);
 	}
@@ -263,7 +267,21 @@ public class MessageController {
 		Set<Tag> updatedTags = new HashSet<Tag>();
 		
 		for (TagDTO tagDTO : messageDTO.getTags()) {
-			updatedTags.add(tagService.findOne(tagDTO.getId()));
+			Tag tag;
+			if (tagDTO.getId() == null) {
+				tag = new Tag();
+				tag.setName(tagDTO.getName());
+				tag.setColor(tagDTO.getColor());
+				user.addTag(tag);
+				tag = tagService.save(tag);
+			}
+			else {
+				tag = tagService.findOne(tagDTO.getId());
+//				tag.setColor(tagDTO.getColor());
+//				tag = tagService.save(tag);
+			}
+			if (tag != null)
+				updatedTags.add(tag);
 		}
 		
 		Set<Tag> toDeleteTags = new HashSet<Tag>();
@@ -302,7 +320,7 @@ public class MessageController {
 			message.addTag(tag);
 		
 		message = messageService.save(message);
-		return new ResponseEntity<MessageDTO>(new MessageDTO(message), HttpStatus.CREATED);
+		return new ResponseEntity<MessageDTO>(new MessageDTO(message, contactService), HttpStatus.CREATED);
 	}
 	
 	@PutMapping(value = "/{id}/moveTo/{folderId}")
@@ -334,7 +352,7 @@ public class MessageController {
 		folder.addMessage(message);
 		
 		message = messageService.save(message);
-		return new ResponseEntity<MessageDTO>(new MessageDTO(message), HttpStatus.OK);
+		return new ResponseEntity<MessageDTO>(new MessageDTO(message, contactService), HttpStatus.OK);
 	}
 	
 	@DeleteMapping(value = "/{id}")

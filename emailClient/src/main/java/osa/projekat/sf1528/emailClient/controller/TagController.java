@@ -22,6 +22,7 @@ import osa.projekat.sf1528.emailClient.model.Message;
 import osa.projekat.sf1528.emailClient.model.Tag;
 import osa.projekat.sf1528.emailClient.model.User;
 import osa.projekat.sf1528.emailClient.service.AccountService;
+import osa.projekat.sf1528.emailClient.service.ContactService;
 import osa.projekat.sf1528.emailClient.service.MessageService;
 import osa.projekat.sf1528.emailClient.service.TagService;
 import osa.projekat.sf1528.emailClient.service.UserService;
@@ -41,6 +42,9 @@ public class TagController {
 	
 	@Autowired
 	MessageService messageService;
+	
+	@Autowired
+	ContactService contactService;
 	
 	private boolean userOwnsTag(User user, Tag tag) {
 		return user.getId() == tag.getUser().getId();
@@ -91,7 +95,7 @@ public class TagController {
 		List<MessageDTO> tagMessages = new ArrayList<MessageDTO>();
 		
 		for (Message message : messages) {
-			tagMessages.add(new MessageDTO(message));
+			tagMessages.add(new MessageDTO(message, contactService));
 		}
 		
 		return new ResponseEntity<List<MessageDTO>>(tagMessages, HttpStatus.OK);
@@ -109,6 +113,7 @@ public class TagController {
 		
 		Tag tag = new Tag();
 		tag.setName(tagDTO.getName());
+		tag.setColor(tagDTO.getColor());
 		user.addTag(tag);
 
 		tag = tagService.save(tag);

@@ -32,8 +32,11 @@ public class UserDTO implements Serializable{
 	public UserDTO(User user) {
 		this(user.getId(), user.getUsername(), user.getPassword(), user.getFirstName(), user.getLastName(), user.getAvatarPath());
 		
-		if (user.getAvatarPath() != null && !user.getAvatarPath().isEmpty())
-			this.encodedAvatarData = Base64.encodeToString(FilesUtil.readBytes(user.getAvatarPath()));
+		if (user.getAvatarPath() != null && !user.getAvatarPath().isEmpty()) {
+			byte[] avatarData = FilesUtil.readBytes(user.getAvatarPath());
+			if (avatarData != null)
+				this.encodedAvatarData = Base64.encodeToString(avatarData);
+		}
 	}
 	
 	
