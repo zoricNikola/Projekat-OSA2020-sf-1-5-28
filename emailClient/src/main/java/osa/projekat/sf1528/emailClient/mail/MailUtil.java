@@ -335,14 +335,14 @@ public class MailUtil {
 			for (Message message : messages) {
 				for (Rule rule : rules) {
 					Message m = rule.doRule(message);
-					if (m != null)
-						messageService.save(m);
-					else if (m.getAccount() == null) {
+					if (m != null && m.getAccount() == null) {
 						messageService.remove(message.getId());
+					}
+					else if (m != null) {
+						message = messageService.save(message);
 					}
 				}
 			}
-			
 		}
 	}
 	
@@ -363,7 +363,9 @@ public class MailUtil {
 		List<Folder> nextLayerFolders = new ArrayList<Folder>();
 		for (Folder folder : folders) {
 			for (Rule rule : folder.getRules()) {
-				rule.doRule(message);
+				Message m = rule.doRule(message);
+				if (m != null && m.getAccount() == null )
+					return;
 			}
 			nextLayerFolders.addAll(folder.getChildFolders());
 		}

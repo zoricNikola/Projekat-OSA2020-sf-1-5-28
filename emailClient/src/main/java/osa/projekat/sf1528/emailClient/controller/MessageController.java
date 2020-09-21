@@ -2,6 +2,7 @@ package osa.projekat.sf1528.emailClient.controller;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -179,12 +180,10 @@ public class MessageController {
 			attachment.setMimeType(attachmentDTO.getMimeType());
 			attachment.setDataPath("");
 			message.addAttachment(attachment);
-			message = messageService.save(message);
-			attachment = attachmentService.save(attachment);
 			
 			if (attachmentDTO.getData() != null && !attachmentDTO.getData().isEmpty()) {
 				byte[] attachmentData = Base64.decode(attachmentDTO.getData());
-				String path = String.format("./data/attachments/%d", attachment.getId());
+				String path = String.format("./data/attachments/%d", new Date().hashCode());
 				
 				if (FilesUtil.saveBytes(attachmentData, path)) {
 					attachment.setDataPath(path);
@@ -206,6 +205,7 @@ public class MessageController {
 //			}
 //		}
 		
+		message = messageService.save(message);
 		boolean succesful = MailUtil.sendMessage(message);
 		
 		if (succesful) {
