@@ -25,7 +25,7 @@ public class Attachment implements Serializable {
 	
 	@Lob
 	@Column(name = "data", unique = false, nullable = false)
-	private String data;
+	private String dataPath;
 	
 	@Column(name = "mime_type", unique = false, nullable = false)
 	private String mimeType;
@@ -47,12 +47,12 @@ public class Attachment implements Serializable {
 		this.id = id;
 	}
 
-	public String getData() {
-		return data;
+	public String getDataPath() {
+		return dataPath;
 	}
 
-	public void setData(String data) {
-		this.data = data;
+	public void setDataPath(String dataPath) {
+		this.dataPath = dataPath;
 	}
 
 	public String getMimeType() {
@@ -81,6 +81,14 @@ public class Attachment implements Serializable {
 
 	public static long getSerialversionuid() {
 		return serialVersionUID;
+	}
+	
+	public static Attachment copyOf(Attachment attachment) {
+		Attachment copy = new Attachment();
+		copy.setName(attachment.getName());
+		copy.setMimeType(attachment.getMimeType());
+		copy.setDataPath(attachment.getDataPath());
+		return copy;
 	}
 
 }

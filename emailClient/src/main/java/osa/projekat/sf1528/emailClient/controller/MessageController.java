@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import osa.projekat.sf1528.emailClient.dto.AttachmentDTO;
 import osa.projekat.sf1528.emailClient.dto.MessageDTO;
+import osa.projekat.sf1528.emailClient.dto.MessageDataDTO;
 import osa.projekat.sf1528.emailClient.dto.TagDTO;
 import osa.projekat.sf1528.emailClient.mail.MailUtil;
 import osa.projekat.sf1528.emailClient.model.Account;
@@ -37,6 +38,8 @@ import osa.projekat.sf1528.emailClient.service.FolderService;
 import osa.projekat.sf1528.emailClient.service.MessageService;
 import osa.projekat.sf1528.emailClient.service.TagService;
 import osa.projekat.sf1528.emailClient.service.UserService;
+import osa.projekat.sf1528.emailClient.util.Base64;
+import osa.projekat.sf1528.emailClient.util.FilesUtil;
 
 @RestController
 @RequestMapping(value = "api/messages")
@@ -132,14 +135,16 @@ public class MessageController {
 		List<Attachment> attachments = attachmentService.findByMessage(message);
 		List<AttachmentDTO> messageAttachments = new ArrayList<AttachmentDTO>();
 		for (Attachment attachment : attachments) {
-			messageAttachments.add(new AttachmentDTO(attachment));
+			AttachmentDTO attachmentDTO = new AttachmentDTO(attachment);
+			attachmentDTO.setData(null);
+			messageAttachments.add(attachmentDTO);
 		}
 		
 		return new ResponseEntity<List<AttachmentDTO>>(messageAttachments, HttpStatus.OK);
 	}
 	
 	@PostMapping(value = "/{accountId}", consumes = "application/json")
-	public ResponseEntity<MessageDTO> saveMessage(@RequestBody MessageDTO messageDTO, @PathVariable("accountId") Long accountId) {
+	public ResponseEntity<MessageDTO> saveMessage(@RequestBody MessageDataDTO messageData, @PathVariable("accountId") Long accountId) {
 		User user = userService.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName());
 		
 		if(user == null) {
@@ -156,19 +161,42 @@ public class MessageController {
 		}		
 		
 		Message message = new Message();
-		message.setFrom(messageDTO.getFrom());
-		message.setTo(messageDTO.getTo());
-		message.setCc(messageDTO.getCc());
-		message.setBcc(messageDTO.getBcc());
+		message.setFrom(messageData.getMessage().getFrom());
+		message.setTo(messageData.getMessage().getTo());
+		message.setCc(messageData.getMessage().getCc());
+		message.setBcc(messageData.getMessage().getBcc());
 		message.setDateTime(LocalDateTime.now());
-		message.setSubject(messageDTO.getSubject());
-		message.setContent(messageDTO.getContent());
+		message.setSubject(messageData.getMessage().getSubject());
+		message.setContent(messageData.getMessage().getContent());
 		message.setUnread(false);
 		account.addMessage(message);
+		storeMessageInAccountsSentFolder(message, account);
+		account = accountService.save(account);
 		
-		for (TagDTO tagDTO : messageDTO.getTags()) {
-			message.addTag(tagService.findOne(tagDTO.getId()));
+		for (AttachmentDTO attachmentDTO : messageData.getAttachments()) {
+			Attachment attachment = new Attachment();
+			attachment.setName(attachmentDTO.getName());
+			attachment.setMimeType(attachmentDTO.getMimeType());
+			attachment.setDataPath("");
+			message.addAttachment(attachment);
+			message = messageService.save(message);
+			attachment = attachmentService.save(attachment);
+			
+			if (attachmentDTO.getData() != null && !attachmentDTO.getData().isEmpty()) {
+				byte[] attachmentData = Base64.decode(attachmentDTO.getData());
+				String path = String.format("./data/attachments/%d", attachment.getId());
+				
+				if (FilesUtil.saveBytes(attachmentData, path)) {
+					attachment.setDataPath(path);
+				}
+			}
+			
 		}
+		
+		
+//		for (TagDTO tagDTO : messageData.getMessage().getTags()) {
+//			message.addTag(tagService.findOne(tagDTO.getId()));
+//		}
 		
 //		for (Folder folder : account.getFolders()) {
 //			for (Rule rule : folder.getRules()) {
@@ -177,7 +205,6 @@ public class MessageController {
 //					messageService.save(m);
 //			}
 //		}
-		storeMessageInAccountsSentFolder(message, account);
 		
 		boolean succesful = MailUtil.sendMessage(message);
 		

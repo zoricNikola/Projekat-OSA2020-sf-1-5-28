@@ -121,12 +121,14 @@ public class Rule implements Serializable{
 			}
 			case COPY: {
 				Message copy = Message.copyOf(message);
-				copy.setFolder(this.destination);
 				this.destination.addMessage(copy);
 				return copy;
 			}
 			case DELETE: {
-				return null;
+				message.getAccount().removeMessage(message);
+				if (message.getFolder() != null)
+					message.getFolder().removeMessage(message);
+				return message;
 			}
 			default: {
 				return null;

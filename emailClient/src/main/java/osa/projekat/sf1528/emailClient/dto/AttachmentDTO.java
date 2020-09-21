@@ -3,6 +3,8 @@ package osa.projekat.sf1528.emailClient.dto;
 import java.io.Serializable;
 
 import osa.projekat.sf1528.emailClient.model.Attachment;
+import osa.projekat.sf1528.emailClient.util.Base64;
+import osa.projekat.sf1528.emailClient.util.FilesUtil;
 
 public class AttachmentDTO implements Serializable {
 
@@ -27,7 +29,13 @@ public class AttachmentDTO implements Serializable {
 	}
 	
 	public AttachmentDTO(Attachment attachment) {
-		this(attachment.getId(), attachment.getData() ,attachment.getMimeType(), attachment.getName());
+		this(attachment.getId(), attachment.getDataPath() ,attachment.getMimeType(), attachment.getName());
+		
+		if (attachment.getDataPath() != null && !attachment.getDataPath().isEmpty()) {
+			byte[] attachmentData = FilesUtil.readBytes(attachment.getDataPath());
+			if (attachmentData != null)
+				this.data = Base64.encodeToString(attachmentData);
+		}
 	}
 
 	public Long getId() {

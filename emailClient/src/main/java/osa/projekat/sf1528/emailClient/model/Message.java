@@ -218,10 +218,11 @@ public class Message implements Serializable {
 		copy.setSubject(message.getSubject());
 		copy.setContent(message.getContent());
 		copy.setUnread(message.unread);
-		copy.setAccount(message.getAccount());
-		copy.setFolder(message.getFolder());
-		copy.setTags(message.getTags());
-		copy.setAttachments(message.getAttachments());
+		message.getAccount().addMessage(copy);
+		for (Tag tag : message.getTags())
+			copy.addTag(tag);
+		for (Attachment attachment : message.getAttachments())
+			copy.addAttachment(Attachment.copyOf(attachment));
 		
 		return copy;
 	}

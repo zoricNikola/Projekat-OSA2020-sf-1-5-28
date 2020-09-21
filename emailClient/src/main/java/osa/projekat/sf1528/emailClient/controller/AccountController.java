@@ -25,6 +25,7 @@ import osa.projekat.sf1528.emailClient.dto.FolderDTO;
 import osa.projekat.sf1528.emailClient.dto.MessageDTO;
 import osa.projekat.sf1528.emailClient.mail.MailUtil;
 import osa.projekat.sf1528.emailClient.model.Account;
+import osa.projekat.sf1528.emailClient.model.Attachment;
 import osa.projekat.sf1528.emailClient.model.Folder;
 import osa.projekat.sf1528.emailClient.model.Message;
 import osa.projekat.sf1528.emailClient.model.Rule;
@@ -32,10 +33,13 @@ import osa.projekat.sf1528.emailClient.model.User;
 import osa.projekat.sf1528.emailClient.model.Rule.Condition;
 import osa.projekat.sf1528.emailClient.model.Rule.Operation;
 import osa.projekat.sf1528.emailClient.service.AccountService;
+import osa.projekat.sf1528.emailClient.service.AttachmentService;
 import osa.projekat.sf1528.emailClient.service.ContactService;
 import osa.projekat.sf1528.emailClient.service.FolderService;
 import osa.projekat.sf1528.emailClient.service.MessageService;
 import osa.projekat.sf1528.emailClient.service.UserService;
+import osa.projekat.sf1528.emailClient.util.Base64;
+import osa.projekat.sf1528.emailClient.util.FilesUtil;
 
 @RestController
 @RequestMapping(value = "api/accounts")
@@ -55,6 +59,9 @@ public class AccountController {
 	
 	@Autowired
 	ContactService contactService;
+	
+	@Autowired
+	AttachmentService attachmentService;
 	
 	private boolean userOwnsAccount(User user, Account account) {
 		return user.getId() == account.getUser().getId();
@@ -104,7 +111,7 @@ public class AccountController {
 			List<Message> newMessages = (List<Message>) result.get("messages");
 			if (newMessages != null && newMessages.size() > 0) {
 				account.getMessages().addAll(newMessages);
-				MailUtil.storeMessagesInFolders(newMessages, account, messageService, folderService);
+				MailUtil.storeMessagesInFolders(newMessages, account);
 			}
 			account = accountService.save(account);
 		}

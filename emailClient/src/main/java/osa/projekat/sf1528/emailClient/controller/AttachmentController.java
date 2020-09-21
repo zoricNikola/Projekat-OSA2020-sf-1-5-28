@@ -75,7 +75,7 @@ public class AttachmentController {
 		}
 		
 		Attachment attachment = new Attachment();
-		attachment.setData(attachmentDTO.getData());
+//		attachment.setData(attachmentDTO.getData());
 		attachment.setMimeType(attachmentDTO.getMimeType());
 		attachment.setName(attachmentDTO.getName());
 		message.addAttachment(attachment);

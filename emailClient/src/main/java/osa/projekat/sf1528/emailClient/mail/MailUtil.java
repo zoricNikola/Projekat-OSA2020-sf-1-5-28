@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,6 +36,7 @@ import osa.projekat.sf1528.emailClient.model.Rule;
 import osa.projekat.sf1528.emailClient.service.FolderService;
 import osa.projekat.sf1528.emailClient.service.MessageService;
 import osa.projekat.sf1528.emailClient.util.Base64;
+import osa.projekat.sf1528.emailClient.util.FilesUtil;
 
 public class MailUtil {
 	
@@ -73,10 +75,15 @@ public class MailUtil {
 			helper.setText(message.getContent());
 			
 			for (Attachment attachment : message.getAttachments()) {
+				if (attachment.getDataPath() != null && !attachment.getDataPath().isEmpty()) {
+					byte[] attachmentData = FilesUtil.readBytes(attachment.getDataPath());
+					if (attachmentData != null) {
+						ByteArrayDataSource dataSource = new ByteArrayDataSource(attachmentData, attachment.getMimeType());
+						helper.addAttachment(attachment.getName(), dataSource);
+					}
+				}
 				
-				ByteArrayDataSource dataSource = new ByteArrayDataSource(Base64.decode(attachment.getData()), attachment.getMimeType());
 	
-				helper.addAttachment(attachment.getName(), dataSource);
 			}
 			
 			mailSender.send(mimeMessage);
@@ -113,10 +120,10 @@ public class MailUtil {
 			
 			store.connect(account.getInServerAddress(), account.getUsername(), account.getPassword());
 			
+			account.setLastMailSync(LocalDateTime.now());
 			javax.mail.Folder inboxFolder = store.getFolder("INBOX");
 			inboxFolder.open(javax.mail.Folder.READ_ONLY);
 			
-			account.setLastMailSync(LocalDateTime.now());
 			javax.mail.Message[] messages = inboxFolder.getMessages();
 			Map<String, Object> result = new HashMap<String, Object>();
 			List<Message> myMessages = new ArrayList<Message>();
@@ -283,27 +290,29 @@ public class MailUtil {
 //				
 //				----- 3 ----------------
 				byte[] attachmentBytes = StreamUtils.copyToByteArray(part.getInputStream());
-				String encodedAttachment = Base64.encodeToString(attachmentBytes);
-//				------------------------
+				String path = String.format("./data/attachments/%d", new Date().hashCode());
 				
-				Attachment attachment = new Attachment();
-				attachment.setName(part.getFileName());
-				attachment.setMimeType(part.getContentType().split(";")[0]);
-				attachment.setData(encodedAttachment);
-				message.addAttachment(attachment);
+				if (FilesUtil.saveBytes(attachmentBytes, path)) {
+					Attachment attachment = new Attachment();
+					attachment.setName(part.getFileName());
+					attachment.setMimeType(part.getContentType().split(";")[0]);
+					attachment.setDataPath(path);
+					message.addAttachment(attachment);
+				}
+				
 			}
 		}
 	}
 	
-	public static void storeMessagesInFolders(List<Message> messages, Account account, MessageService messageService, FolderService folderService) {
+	public static void storeMessagesInFolders(List<Message> messages, Account account) {
 		
-		doRulesForIncomingMessages(messages, account, messageService, folderService);
+		doRulesForIncomingMessages(messages, account);
 		
 		List<Message> inboxMessages = new ArrayList<Message>();
 		List<Message> sentMessages = new ArrayList<Message>();
 		
 		for (Message message : messages) {
-			if (message.getFolder() == null) {
+			if (message.getFolder() == null && message.getAccount() != null) {
 				if (message.getTo().contains(account.getUsername())
 						|| message.getCc().contains(account.getUsername())
 						|| message.getBcc().contains(account.getUsername()))
@@ -327,14 +336,17 @@ public class MailUtil {
 				for (Rule rule : rules) {
 					Message m = rule.doRule(message);
 					if (m != null)
-						messageService.save(rule.doRule(message));
+						messageService.save(m);
+					else if (m.getAccount() == null) {
+						messageService.remove(message.getId());
+					}
 				}
 			}
 			
 		}
 	}
 	
-	public static void doRulesForIncomingMessages(List<Message> messages, Account account, MessageService messageService, FolderService folderService) {
+	public static void doRulesForIncomingMessages(List<Message> messages, Account account) {
 		List<Folder> rootFolders = new ArrayList<Folder>();
 		for (Folder folder : account.getFolders()) {
 			if (folder.getParent() == null) {
@@ -343,24 +355,21 @@ public class MailUtil {
 		}
 		
 		for (Message message : messages) {
-			doRulesForMessage(message, rootFolders, messageService, folderService);
-			messageService.save(message);
+			doRulesForMessage(message, rootFolders);
 		}
 	}
 	
-	public static void doRulesForMessage(Message message, List<Folder> folders, MessageService messageService, FolderService folderService) {
+	public static void doRulesForMessage(Message message, List<Folder> folders) {
 		List<Folder> nextLayerFolders = new ArrayList<Folder>();
 		for (Folder folder : folders) {
 			for (Rule rule : folder.getRules()) {
 				rule.doRule(message);
-//				messageService.save(rule.doRule(message));
-				
 			}
 			nextLayerFolders.addAll(folder.getChildFolders());
 		}
 		
 		if (nextLayerFolders.size() > 0)
-			doRulesForMessage(message, nextLayerFolders, messageService, folderService);
+			doRulesForMessage(message, nextLayerFolders);
 	}
 	
 	public static void storeMessagesInAccountsInboxFolder(List<Message> messages, Account account) {
