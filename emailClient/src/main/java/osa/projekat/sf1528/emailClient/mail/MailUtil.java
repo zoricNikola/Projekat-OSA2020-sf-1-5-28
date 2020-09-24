@@ -146,7 +146,7 @@ public class MailUtil {
 						}
 					}
 					else {
-						break;
+//						break;
 					}
 				}
 			}
@@ -314,8 +314,8 @@ public class MailUtil {
 		for (Message message : messages) {
 			if (message.getFolder() == null && message.getAccount() != null) {
 				if (message.getTo().contains(account.getUsername())
-						|| message.getCc().contains(account.getUsername())
-						|| message.getBcc().contains(account.getUsername()))
+						|| (message.getCc() != null && message.getCc().contains(account.getUsername()) )
+						|| (message.getBcc() != null && message.getBcc().contains(account.getUsername())) )
 					inboxMessages.add(message);
 				if (message.getFrom().contains(account.getUsername()))
 					sentMessages.add(message);

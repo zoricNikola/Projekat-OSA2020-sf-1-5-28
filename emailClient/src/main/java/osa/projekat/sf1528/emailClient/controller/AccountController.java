@@ -123,7 +123,9 @@ public class AccountController {
 			}
 		});
 		List<MessageDTO> accountMessages = new ArrayList<MessageDTO>();
-		for (int i = 0; i < messages.size(); i ++) {
+		for (int i = 0; i < 50; i ++) {
+			if ( i == messages.size())
+				break;
 			accountMessages.add(new MessageDTO(messages.get(i), contactService));
 		}
 		

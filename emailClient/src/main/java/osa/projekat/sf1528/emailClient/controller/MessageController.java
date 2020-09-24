@@ -2,9 +2,12 @@ package osa.projekat.sf1528.emailClient.controller;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import osa.projekat.sf1528.emailClient.dto.AttachmentDTO;
+import osa.projekat.sf1528.emailClient.dto.FilterDTO;
 import osa.projekat.sf1528.emailClient.dto.MessageDTO;
 import osa.projekat.sf1528.emailClient.dto.MessageDataDTO;
 import osa.projekat.sf1528.emailClient.dto.TagDTO;
@@ -69,6 +73,9 @@ public class MessageController {
 	
 	private boolean userOwnsMessage(User user, Message message) {
 		return user.getId() == message.getAccount().getUser().getId();
+	}
+	private boolean userOwnsAccount(User user, Account account) {
+		return user.getId() == account.getUser().getId();
 	}
 
 	@GetMapping(value="/{id}")
@@ -249,6 +256,85 @@ public class MessageController {
 //			return new ResponseEntity<Boolean>(false, HttpStatus.INTERNAL_SERVER_ERROR);
 //		
 //	}
+	
+	@PostMapping(value="/filter/{accountId}")
+	public ResponseEntity<List<MessageDTO>> filterAccountMessages(@PathVariable("accountId") Long accountId, @RequestBody FilterDTO filter) {
+		User user = userService.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName());
+		
+		if (user == null)
+			return new ResponseEntity<List<MessageDTO>>(HttpStatus.UNAUTHORIZED);
+		
+		Account account = accountService.findOne(accountId);
+		
+		if (account == null)
+			return new ResponseEntity<List<MessageDTO>>(HttpStatus.NOT_FOUND);
+
+		if (!userOwnsAccount(user, account))
+			return new ResponseEntity<List<MessageDTO>>(HttpStatus.UNAUTHORIZED);
+		
+		List<Message> messages = messageService.findByAccount(account);
+		
+		Set<Message> filteredSet = new HashSet<Message>();
+		
+		if (filter.getFilteringTags().size() > 0) {
+			for (Message message : messages) {
+				tagLoop : for (Tag tag : message.getTags()) {
+					for (TagDTO tagDTO : filter.getFilteringTags()) {
+						if (tag.getId() == tagDTO.getId()) {
+							filteredSet.add(message);
+							break tagLoop;
+						}
+					}
+				}
+			}
+		}
+		
+		if (!filter.getSearchText().isEmpty()) {
+			for (Message message : messages) {
+				if (message.getFrom().toLowerCase().contains(filter.getSearchText().toLowerCase())) {
+					filteredSet.add(message);
+					continue;
+				}
+				if (message.getTo().toLowerCase().contains(filter.getSearchText().toLowerCase())) {
+					filteredSet.add(message);
+					continue;
+				}
+				if (message.getCc() != null && message.getCc().toLowerCase().contains(filter.getSearchText().toLowerCase())) {
+					filteredSet.add(message);
+					continue;
+				}
+				if (message.getBcc() != null && message.getBcc().toLowerCase().contains(filter.getSearchText().toLowerCase())) {
+					filteredSet.add(message);
+					continue;
+				}
+				if (message.getSubject().toLowerCase().contains(filter.getSearchText().toLowerCase())) {
+					filteredSet.add(message);
+					continue;
+				}
+				if (message.getContent().toLowerCase().contains(filter.getSearchText().toLowerCase())) {
+					filteredSet.add(message);
+					continue;
+				}
+			}
+		}
+		
+		List<Message> filteredMessages = new ArrayList<Message>();
+		filteredMessages.addAll(filteredSet);
+		
+		Collections.sort(filteredMessages, new Comparator<Message>() {
+			public int compare(Message m1, Message m2) {
+				return m1.getDateTime().isAfter(m2.getDateTime()) ? -1 : 1;
+			}
+		});
+		List<MessageDTO> accountMessages = new ArrayList<MessageDTO>();
+		for (int i = 0; i < 50; i ++) {
+			if ( i == filteredMessages.size())
+				break;
+			accountMessages.add(new MessageDTO(filteredMessages.get(i), contactService));
+		}
+		
+		return new ResponseEntity<List<MessageDTO>>(accountMessages, HttpStatus.OK);
+	}
 	
 	@PutMapping(value = "/{id}/markAsRead")
 	public ResponseEntity<Boolean> markMessageAsRead(@PathVariable("id") Long id) {

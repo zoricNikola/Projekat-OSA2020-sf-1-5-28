@@ -1,6 +1,10 @@
 package osa.projekat.sf1528.emailClient.security;
 
-public class LoginDTO {
+import java.io.Serializable;
+
+public class LoginDTO implements Serializable {
+	
+	private static final long serialVersionUID = -408442848890908044L;
 	
 	private String username;
 	private String password;
