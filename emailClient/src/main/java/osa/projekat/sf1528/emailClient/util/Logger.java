@@ -83,4 +83,34 @@ public class Logger {
 			logger.error("Unauthorized message move tried for message with id {}\n", messageId);
 	}
 	
+	@AfterReturning(value = "execution(* osa..MessageController.deleteMessage(..))", returning = "returnValue")
+	public void logAfterMessageDelete(JoinPoint joinPoint, ResponseEntity<Void> returnValue) {
+		Long id = (Long) joinPoint.getArgs()[0];
+		if (returnValue.getStatusCode() == HttpStatus.OK)
+			logger.info("Message with id {} deleted\n", id);
+		else if (returnValue.getStatusCode() == HttpStatus.UNAUTHORIZED)
+			logger.error("Unauthorized message delete tried for message with id: {}\n", id);
+		else if (returnValue.getStatusCode() == HttpStatus.NOT_FOUND)
+			logger.error("Tried deleting message that doesn't exist id: {}\n", id);
+	}
+	
+	@AfterReturning(value = "execution(* osa..AccountController.saveAccount(..))", returning = "returnValue")
+	public void logAfterAccountCreate(JoinPoint joinPoint, ResponseEntity<AccountDTO> returnValue) {
+		AccountDTO account = returnValue.getBody();
+		Long userId = (Long) joinPoint.getArgs()[1];
+		if (returnValue.getStatusCode() == HttpStatus.CREATED)
+			logger.info("Account with id {} created for user with id {}\n", account.getId(), userId);
+		else if (returnValue.getStatusCode() == HttpStatus.UNAUTHORIZED)
+			logger.error("Unauthorized account creation tried for user with id: {}\n", userId);
+	}
+	
+	@AfterReturning(value = "execution(* osa..AccountController.updateAccount(..))", returning = "returnValue")
+	public void logAfterAccountUpdate(JoinPoint joinPoint, ResponseEntity<AccountDTO> returnValue) {
+		Long id = (Long) joinPoint.getArgs()[1];
+		if (returnValue.getStatusCode() == HttpStatus.CREATED)
+			logger.info("Updated account with id {}\n", id);
+		else if (returnValue.getStatusCode() == HttpStatus.UNAUTHORIZED || returnValue.getStatusCode() == HttpStatus.BAD_REQUEST)
+			logger.error("Unauthorized account update tried for account with id: {}\n", id);
+	}
+	
 }
