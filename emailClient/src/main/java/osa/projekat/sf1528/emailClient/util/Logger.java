@@ -113,4 +113,35 @@ public class Logger {
 			logger.error("Unauthorized account update tried for account with id: {}\n", id);
 	}
 	
+	@AfterReturning(value = "execution(* osa..ContactController.saveContact(..))", returning = "returnValue")
+	public void logAfterContactCreate(JoinPoint joinPoint, ResponseEntity<ContactDTO> returnValue) {
+		ContactDTO contact = returnValue.getBody();
+		Long userId = (Long) joinPoint.getArgs()[1];
+		if (returnValue.getStatusCode() == HttpStatus.CREATED)
+			logger.info("Contact with id {} created for user with id {}\n", contact.getId(), userId);
+		else if (returnValue.getStatusCode() == HttpStatus.UNAUTHORIZED)
+			logger.error("Unauthorized contact creation tried for user with id: {}\n", userId);
+	}
+	
+	@AfterReturning(value = "execution(* osa..ContactController.updateContact(..))", returning = "returnValue")
+	public void logAfterContactUpdate(JoinPoint joinPoint, ResponseEntity<ContactDTO> returnValue) {
+		Long id = (Long) joinPoint.getArgs()[1];
+		if (returnValue.getStatusCode() == HttpStatus.CREATED)
+			logger.info("Updated contact with id {}\n", id);
+		else if (returnValue.getStatusCode() == HttpStatus.UNAUTHORIZED || returnValue.getStatusCode() == HttpStatus.BAD_REQUEST)
+			logger.error("Unauthorized contact update tried for contact with id: {}\n", id);
+	}
+	
+	@AfterReturning(value = "execution(* osa..ContactController.deleteContact(..))", returning = "returnValue")
+	public void logAfterContactDelete(JoinPoint joinPoint, ResponseEntity<Void> returnValue) {
+		Long id = (Long) joinPoint.getArgs()[0];
+		if (returnValue.getStatusCode() == HttpStatus.OK)
+			logger.info("Contact with id {} deleted\n", id);
+		else if (returnValue.getStatusCode() == HttpStatus.UNAUTHORIZED)
+			logger.error("Unauthorized contact delete tried for contact with id: {}\n", id);
+		else if (returnValue.getStatusCode() == HttpStatus.NOT_FOUND)
+			logger.error("Tried deleting contact that doesn't exist id: {}\n", id);
+	}
+	
+	
 }
