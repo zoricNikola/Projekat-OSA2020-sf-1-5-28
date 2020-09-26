@@ -143,5 +143,4 @@ public class Logger {
 			logger.error("Tried deleting contact that doesn't exist id: {}\n", id);
 	}
 	
-	
 }
