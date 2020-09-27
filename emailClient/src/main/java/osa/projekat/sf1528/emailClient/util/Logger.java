@@ -143,4 +143,64 @@ public class Logger {
 			logger.error("Tried deleting contact that doesn't exist id: {}\n", id);
 	}
 	
+	@AfterReturning(value = "execution(* osa..AccountController.deleteAccount(..))", returning = "returnValue")
+	public void logAfterAccountDelete(JoinPoint joinPoint, ResponseEntity<Void> returnValue) {
+		Long id = (Long) joinPoint.getArgs()[0];
+		if (returnValue.getStatusCode() == HttpStatus.OK)
+			logger.info("Account with id {} deleted\n", id);
+		else if (returnValue.getStatusCode() == HttpStatus.UNAUTHORIZED)
+			logger.error("Unauthorized account delete tried for account with id: {}\n", id);
+		else if (returnValue.getStatusCode() == HttpStatus.NOT_FOUND)
+			logger.error("Tried deleting account that doesn't exist id: {}\n", id);
+	}
+	
+	@AfterReturning(value = "execution(* osa..FolderController.saveFolder(..))", returning = "returnValue")
+	public void logAfterFolderCreate(JoinPoint joinPoint, ResponseEntity<FolderDTO> returnValue) {
+		FolderDTO folder = returnValue.getBody();
+		Long accountId = (Long) joinPoint.getArgs()[1];
+		if (returnValue.getStatusCode() == HttpStatus.CREATED)
+			logger.info("Folder with id {} created for account with id {}\n", folder.getId(), accountId);
+		else if (returnValue.getStatusCode() == HttpStatus.UNAUTHORIZED || returnValue.getStatusCode() == HttpStatus.BAD_REQUEST)
+			logger.error("Unauthorized folder creation tried for account with id: {}\n", accountId);
+	}
+	
+	@AfterReturning(value = "execution(* osa..FolderController.addFolderChildFolder(..))", returning = "returnValue")
+	public void logAfterChildFolderCreate(JoinPoint joinPoint, ResponseEntity<FolderDTO> returnValue) {
+		FolderDTO folder = returnValue.getBody();
+		Long parentFolderId = (Long) joinPoint.getArgs()[1];
+		if (returnValue.getStatusCode() == HttpStatus.CREATED)
+			logger.info("Created child folder with id {} for parent folder with id {}\n", folder.getId(), parentFolderId);
+		else if (returnValue.getStatusCode() == HttpStatus.UNAUTHORIZED || returnValue.getStatusCode() == HttpStatus.BAD_REQUEST)
+			logger.error("Unauthorized child folder creation tried for parent folder with id: {}\n", parentFolderId);
+	}
+	
+	@AfterReturning(value = "execution(* osa..FolderController.updateFolder(..))", returning = "returnValue")
+	public void logAfterFolderUpdate(JoinPoint joinPoint, ResponseEntity<FolderDTO> returnValue) {
+		Long id = (Long) joinPoint.getArgs()[1];
+		if (returnValue.getStatusCode() == HttpStatus.OK)
+			logger.info("Updated folder with id {}\n", id);
+		else if (returnValue.getStatusCode() == HttpStatus.UNAUTHORIZED || returnValue.getStatusCode() == HttpStatus.BAD_REQUEST)
+			logger.error("Unauthorized folder update tried for folder with id: {}\n", id);
+	}
+	
+	@AfterReturning(value = "execution(* osa..FolderController.updateFolderRules(..))", returning = "returnValue")
+	public void logAfterFolderRulesUpdate(JoinPoint joinPoint, ResponseEntity<RuleDTO> returnValue) {
+		Long id = (Long) joinPoint.getArgs()[0];
+		if (returnValue.getStatusCode() == HttpStatus.CREATED)
+			logger.info("Updated rules for folder with id {}\n", id);
+		else if (returnValue.getStatusCode() == HttpStatus.UNAUTHORIZED || returnValue.getStatusCode() == HttpStatus.BAD_REQUEST)
+			logger.error("Unauthorized rules update tried for folder with id: {}\n", id);
+	}
+	
+	@AfterReturning(value = "execution(* osa..FolderController.deleteFolder(..))", returning = "returnValue")
+	public void logAfterFolderDelete(JoinPoint joinPoint, ResponseEntity<Void> returnValue) {
+		Long id = (Long) joinPoint.getArgs()[0];
+		if (returnValue.getStatusCode() == HttpStatus.OK)
+			logger.info("Folder with id {} deleted\n", id);
+		else if (returnValue.getStatusCode() == HttpStatus.UNAUTHORIZED)
+			logger.error("Unauthorized folder delete tried for contact with id: {}\n", id);
+		else if (returnValue.getStatusCode() == HttpStatus.NOT_FOUND)
+			logger.error("Tried deleting folder that doesn't exist id: {}\n", id);
+	}
+	
 }
