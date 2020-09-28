@@ -136,10 +136,12 @@ public class MailUtil {
 								ZoneId.systemDefault()).isAfter(lastSync)) {
 						try {
 							Message myMessage = javaxMessageToMyMessage(message);
-							myMessage.setAccount(account);
-							//					account.addMessage(myMessage);
-							//					storeInAccountsInboxFolder(myMessage, account);
-							myMessages.add(myMessage);
+							if (!myMessage.getFrom().contains(account.getUsername())) {
+								myMessage.setAccount(account);
+								//					account.addMessage(myMessage);
+								//					storeInAccountsInboxFolder(myMessage, account);
+								myMessages.add(myMessage);
+							}
 							
 						} catch (Exception e) {
 							e.printStackTrace();
